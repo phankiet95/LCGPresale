@@ -1,0 +1,134 @@
+/* Design tokens taken from the UI mockup (LCG Opportunity Management — UI mockup) */
+:root {
+  --bg: #F5F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #F8F9FB;
+  --border: #E3E6EB;
+  --border-strong: #D5D9E0;
+  --row-border: #F0F2F5;
+  --text: #111827;
+  --text-2: #374151;
+  --muted: #5B6472;
+  --faint: #8A93A1;
+  --primary: #1E4FC2;
+  --primary-hover: #163C94;
+  --primary-soft: #EAF0FD;
+  --primary-tint: #DCE6FB;
+  --primary-bar-rest: #A9BFEF;
+  --chip: #EEF1F5;
+  --danger: #B42318;
+  --danger-soft: #FFF6F5;
+  --danger-border: #F3C4BD;
+  --success: #14663A;
+  --green-bg: #E3F4EA; --green-fg: #14663A; --green: #1F8A4C;
+  --amber-bg: #FDF1DC; --amber-fg: #7A4A00; --amber: #C98A1B;
+  --red-bg: #FBE6E3;   --red-fg: #9B2414;   --red: #C4321F;
+  --missing-border: #E0A63C; --missing-bg: #FFFBF2;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow-pop: 0 10px 30px rgba(17, 24, 39, .16);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body { font: 14px/1.4 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+a { color: var(--primary); }
+a:hover { color: var(--primary-hover); }
+button, input, select, textarea { font: inherit; color: inherit; }
+h1 { margin: 0; font-size: 24px; font-weight: 700; }
+h2 { margin: 0; font-size: 16px; font-weight: 600; }
+
+/* ---------- layout primitives */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.spacer { flex: 1 1 auto; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.eyebrow { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.page-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.page-head .sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.grid-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px; }
+
+/* ---------- buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 40px; padding: 0 14px; border-radius: var(--radius); border: 1px solid var(--border-strong);
+  background: var(--surface); color: var(--text-2); font-size: 13px; cursor: pointer; text-decoration: none; white-space: nowrap;
+}
+.btn:hover { border-color: var(--faint); color: var(--text); }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; font-size: 14px; padding: 0 16px; }
+.btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: #fff; }
+.btn-danger { border-color: var(--danger); color: var(--danger); font-weight: 600; }
+.btn-danger:hover { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
+.btn-success { border-color: var(--success); color: var(--success); font-weight: 600; }
+.btn-success:hover { background: var(--green-bg); color: var(--success); border-color: var(--success); }
+.btn-outline-primary { border-color: var(--primary); color: var(--primary); font-weight: 600; font-size: 12px; height: 32px; padding: 0 12px; }
+.btn-sm { height: 32px; padding: 0 10px; font-size: 12px; }
+.btn-ghost { border-color: transparent; background: transparent; }
+.link-btn { border: 0; background: none; padding: 0; color: var(--primary); cursor: pointer; font-weight: 600; font-size: 13px; }
+
+/* ---------- forms */
+/* block (not flex) so "Label *" stays on one line; controls and hints drop below */
+.field { display: block; font-size: 13px; font-weight: 600; color: var(--text-2); }
+.field > .input, .field > .select, .field > .textarea { display: block; margin-top: 6px; }
+.field .req { color: var(--danger); margin-left: 2px; }
+.field .hint { display: block; margin-top: 2px; font-weight: 400; font-size: 12px; color: var(--muted); }
+.field > .hint + .input, .field > .hint + .select { margin-top: 6px; }
+.input, .select, .textarea {
+  height: 40px; border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 0 12px;
+  font-weight: 400; font-size: 14px; color: var(--text); background: var(--surface); width: 100%;
+}
+.textarea { height: auto; min-height: 96px; padding: 10px 12px; resize: vertical; }
+.input:focus, .select:focus, .textarea:focus { outline: 2px solid var(--primary-tint); border-color: var(--primary); }
+.input.missing, .select.missing, .textarea.missing { border-color: var(--missing-border); background: var(--missing-bg); }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.form-grid .full { grid-column: 1 / -1; }
+.check { display: flex; gap: 10px; align-items: center; font-size: 13px; color: var(--text-2); min-height: 36px; font-weight: 400; }
+.check input { width: 18px; height: 18px; }
+.section-label { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.divider { height: 1px; background: var(--border); }
+
+/* ---------- badges & chips */
+.badge { display: inline-block; font-size: 12px; font-weight: 600; background: var(--chip); border-radius: 4px; padding: 2px 6px; white-space: nowrap; }
+.badge-dark { background: var(--text); color: #fff; font-weight: 700; }
+.pill { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 10px; padding: 2px 8px; white-space: nowrap; }
+.h-Green { background: var(--green-bg); color: var(--green-fg); }
+.h-Amber { background: var(--amber-bg); color: var(--amber-fg); }
+.h-Red { background: var(--red-bg); color: var(--red-fg); }
+.h-Closed { background: var(--chip); color: var(--muted); }
+.sev { font-size: 11px; font-weight: 700; border-radius: 4px; padding: 2px 5px; }
+.sev-High { background: var(--red-bg); color: var(--red-fg); }
+.sev-Medium { background: var(--amber-bg); color: var(--amber-fg); }
+.sev-Low { background: var(--chip); color: var(--text-2); }
+.missing-chip { display: inline-block; border: 1px dashed var(--amber); background: var(--missing-bg); color: var(--amber-fg); border-radius: 4px; padding: 1px 8px; font-size: 12px; font-weight: 400; }
+
+/* ---------- tables */
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow-x: auto; }
+table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.data th { text-align: left; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--surface-2); font-weight: 600; white-space: nowrap; }
+table.data td { padding: 10px 12px; border-bottom: 1px solid var(--row-border); vertical-align: top; }
+table.data tr:last-child td { border-bottom: 0; }
+table.data .num { text-align: right; white-space: nowrap; }
+table.data tr.overdue { background: var(--danger-soft); }
+table.data tr.selected td { box-shadow: inset 0 1px 0 var(--primary-tint), inset 0 -1px 0 var(--primary-tint); }
+table.data th.sortable { cursor: pointer; user-select: none; }
+
+/* ---------- tabs */
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); }
+.tab { height: 40px; padding: 0 14px; border: 0; background: transparent; font-size: 14px; cursor: pointer; margin-bottom: -1px; border-bottom: 2px solid transparent; color: var(--text-2); }
+.tab[aria-selected="true"] { border-bottom-color: var(--primary); color: var(--primary); font-weight: 600; }
+.tab .count { font-size: 12px; color: var(--muted); margin-left: 4px; }
+
+/* ---------- alerts */
+.alert { border-radius: var(--radius-lg); padding: 12px 16px; font-size: 13px; }
+.alert-danger { background: var(--danger-soft); border: 1px solid var(--danger-border); color: #7A1E10; }
+.alert-warn { background: var(--missing-bg); border: 1px solid var(--missing-border); color: var(--amber-fg); }
+.alert-info { background: #F3F6FD; color: #24345C; }
+.error-text { color: var(--danger); font-size: 13px; }
+
+@media (max-width: 720px) {
+  .form-grid { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "lcg-opportunity-management",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run",
+    "preview": "nuxt build && wrangler dev",
+    "deploy": "nuxt build && wrangler deploy",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "db:seed:build": "node scripts/build-seed.ts",
+    "db:seed:local": "node scripts/build-seed.ts && wrangler d1 execute DB --local --file=server/database/seed/seed.sql",
+    "db:seed:remote": "node scripts/build-seed.ts && wrangler d1 execute DB --remote --file=server/database/seed/seed.sql",
+    "db:export:remote": "wrangler d1 export DB --remote --output=backup/d1-export.sql",
+    "user:create": "node scripts/create-user.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.4",
+    "nuxt": "^4.6.4",
+    "nuxt-auth-utils": "^0.6.2",
+    "vue": "^3.5.0",
+    "vue-router": "^4.5.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261110.1",
+    "drizzle-kit": "^0.31.11",
+    "nitro-cloudflare-dev": "^0.2.2",
+    "typescript": "^5.9.0",
+    "vitest": "^5.1.0",
+    "vue-tsc": "^3.0.0",
+    "wrangler": "^4.160.1"
+  }
+}
