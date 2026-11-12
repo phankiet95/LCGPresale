@@ -2,6 +2,7 @@
 import type { OppDetailResponse } from '#shared/types'
 import { WARNING_META } from '#shared/rules'
 import { OPEN_STAGES, STAGE_SHORT, WARNING_LABEL } from '#shared/constants'
+import { BriefcaseBusiness } from 'lucide-vue-next'
 import type { TransitionAction } from '~/components/TransitionDialog.vue'
 
 const route = useRoute()
@@ -52,14 +53,14 @@ const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s =
       <div class="stack" style="gap: 8px; min-width: 0">
         <div class="row small">
           <span style="font-weight: 700; color: var(--muted)">{{ opp.oppCode }}</span>
-          <span class="badge badge-dark">{{ opp.marketCode }}</span>
+          <span class="badge mkt-cell" style="display: inline-flex"><MarketFlag :code="opp.marketCode" :size="16" />{{ opp.marketCode }}</span>
           <span class="badge">{{ opp.partner }}</span>
           <span v-if="opp.status === 'On Hold'" class="badge" style="background: var(--amber-bg); color: var(--amber-fg)">On Hold · {{ opp.pendingReason }}</span>
           <span v-if="opp.stage === 'W'" class="badge h-Green">Won {{ opp.closedAt }}</span>
           <span v-if="opp.stage === 'L'" class="badge h-Red">Lost {{ opp.closedAt }} · {{ opp.lostReason }}</span>
           <span v-if="opp.isKeyDeal" class="badge" style="background: var(--primary-soft); color: var(--primary)">Key deal</span>
         </div>
-        <h1 style="font-size: 26px">{{ opp.name }}</h1>
+        <PageTitle :icon="BriefcaseBusiness" :title="opp.name" />
         <span style="font-size: 15px; color: var(--text-2)">{{ opp.customer }} · Sales owner {{ opp.salesOwner }}</span>
       </div>
       <div class="row">
@@ -192,7 +193,7 @@ const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s =
 .stepper { display: flex; gap: 2px; flex-wrap: wrap; }
 .step { flex: 1 1 0; min-width: 90px; padding: 8px 10px; font-size: 12px; font-weight: 600; text-align: center; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%); background: var(--chip); color: var(--muted); }
 .step.past { background: var(--primary-tint); color: var(--primary-hover); }
-.step.current { background: var(--primary); color: #fff; }
+.step.current { background: var(--primary); color: var(--on-primary); }
 .step.current.lost { background: var(--danger); }
 .kpi { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; }
 .kv { font-size: 22px; font-weight: 700; }
@@ -204,7 +205,7 @@ const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s =
 .t-line { display: flex; flex-direction: column; align-items: center; }
 .t-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--primary); margin-top: 4px; flex: none; }
 .t-dot.sys { background: var(--faint); }
-.t-dot.future { background: #fff; border: 2px solid var(--primary); }
+.t-dot.future { background: var(--surface); border: 2px solid var(--primary); }
 .t-bar { flex: 1; width: 2px; background: var(--border); }
 .kv-row { display: grid; grid-template-columns: 150px 1fr; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--row-border); font-size: 13px; }
 .kv-row > span:first-child { color: var(--muted); }

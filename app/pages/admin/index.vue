@@ -2,6 +2,7 @@
 import type { AdminUser } from '#shared/types'
 import type { Role } from '#shared/rules'
 import { ALL_MARKET_ROLES, MARKET_CODES, ROLE_HELP, ROLE_LABEL } from '#shared/constants'
+import { KeyRound, ShieldCheck, UserPen, UserPlus, UserSearch } from 'lucide-vue-next'
 
 useHead({ title: 'Admin · Users & roles' })
 const { $api } = useNuxtApp()
@@ -22,6 +23,16 @@ const rows = computed(() => (users.value ?? []).filter((u) => {
   if (statusFilter.value === 'pending' && !(u.isActive && u.mustChangePassword)) return false
   return true
 }))
+const ROLE_RANK: Record<Role, number> = { admin: 0, management: 1, market_lead: 2, sales: 3, viewer: 4 }
+const userSort = useTableSort(rows, {
+  key: 'account',
+  descFirst: ['ownedOpps', 'lastLoginAt'],
+  get: {
+    role: (u: AdminUser) => ROLE_RANK[u.role],
+    markets: (u: AdminUser) => (ALL_MARKET_ROLES.includes(u.role) ? 'All' : u.markets.join(',')),
+    status: (u: AdminUser) => status(u),
+  },
+})
 const counts = computed(() => ({
   total: users.value?.length ?? 0,
   active: users.value?.filter(u => u.isActive).length ?? 0,
@@ -103,10 +114,10 @@ const status = (u: AdminUser) => !u.isActive ? 'Inactive' : !u.hasPassword ? 'No
 <template>
   <div class="page-head">
     <div>
-      <h1>Admin · Users &amp; roles</h1>
-      <div class="sub">{{ counts.total }} users · {{ counts.active }} active · {{ counts.inactive }} inactive (imported Excel owners start inactive)</div>
+      <PageTitle :icon="ShieldCheck" title="Admin · Users & roles" />
+      <div class="sub indent">{{ counts.total }} users · {{ counts.active }} active · {{ counts.inactive }} inactive (imported Excel owners start inactive)</div>
     </div>
-    <button type="button" class="btn btn-primary" @click="openNew">+ New user</button>
+    <button type="button" class="btn btn-primary" @click="openNew"><UserPlus class="ico" aria-hidden="true" />New user</button>
   </div>
 
   <div class="tabs" role="tablist">
@@ -127,26 +138,37 @@ const status = (u: AdminUser) => !u.isActive ? 'Inactive' : !u.hasPassword ? 'No
   <p v-if="error" class="error-text">{{ errMsg(error) }}</p>
   <div class="table-wrap">
     <table class="data" style="min-width: 980px">
-      <thead><tr><th>Account</th><th>Name · Email</th><th>Role</th><th>Markets</th><th class="num">Owns</th><th>Status</th><th>Last login</th><th /></tr></thead>
+      <thead>
+        <tr>
+          <SortTh :sort="userSort" k="account">Account</SortTh><SortTh :sort="userSort" k="displayName">Name · Email</SortTh>
+          <SortTh :sort="userSort" k="role">Role</SortTh><SortTh :sort="userSort" k="markets">Markets</SortTh>
+          <SortTh :sort="userSort" k="ownedOpps" num>Owns</SortTh><SortTh :sort="userSort" k="status">Status</SortTh>
+          <SortTh :sort="userSort" k="lastLoginAt">Last login</SortTh><th />
+        </tr>
+      </thead>
       <tbody>
-        <tr v-for="u in rows" :key="u.id" :style="{ opacity: u.isActive ? 1 : 0.7 }">
+        <tr v-for="u in userSort.rows.value" :key="u.id" :style="{ opacity: u.isActive ? 1 : 0.7 }">
           <td style="font-weight: 600">{{ u.account }}<span v-if="u.id === me?.id" class="badge" style="margin-left: 6px">you</span></td>
           <td><div>{{ u.displayName }}</div><div class="small muted">{{ u.email ?? '—' }}</div></td>
           <td>{{ ROLE_LABEL[u.role] }}</td>
-          <td>{{ ALL_MARKET_ROLES.includes(u.role) ? 'All' : u.markets.join(', ') || '—' }}</td>
+          <td>
+            <span v-if="ALL_MARKET_ROLES.includes(u.role)" class="muted">All</span>
+            <span v-else-if="!u.markets.length" class="muted">—</span>
+            <span v-else class="row" style="gap: 4px"><MarketFlag v-for="m in u.markets" :key="m" :code="m" :size="18" /></span>
+          </td>
           <td class="num">{{ u.ownedOpps }}</td>
           <td>
             <span class="pill" :class="u.isActive ? (u.mustChangePassword || !u.hasPassword ? 'h-Amber' : 'h-Green') : 'h-Closed'">{{ status(u) }}</span>
           </td>
           <td class="small muted" style="white-space: nowrap">{{ fmtDateTime(u.lastLoginAt) }}</td>
           <td style="white-space: nowrap; text-align: right">
-            <button type="button" class="btn btn-sm" @click="openEdit(u)">Edit</button>
-            <button type="button" class="btn btn-sm" style="margin-left: 6px" @click="confirmReset = u">
+            <button type="button" class="btn btn-sm" @click="openEdit(u)"><UserPen class="ico" aria-hidden="true" />Edit</button>
+            <button type="button" class="btn btn-sm" style="margin-left: 6px" @click="confirmReset = u"><KeyRound class="ico" aria-hidden="true" />
               {{ u.isActive && u.hasPassword ? 'Reset password' : 'Activate + password' }}
             </button>
           </td>
         </tr>
-        <tr v-if="!rows.length"><td colspan="8" class="muted">No users match.</td></tr>
+        <tr v-if="!rows.length"><td colspan="8"><div class="empty"><UserSearch class="ico" aria-hidden="true" />No users match.</div></td></tr>
       </tbody>
     </table>
   </div>
@@ -156,7 +178,10 @@ const status = (u: AdminUser) => !u.isActive ? 'Inactive' : !u.hasPassword ? 'No
     <form id="user-form" class="stack" @submit.prevent="saveDraft">
       <div class="form-grid">
         <label class="field">Account (login) <span class="req">*</span>
-          <input v-model="draft.account" class="input" required placeholder="e.g. SonTV16" pattern="[A-Za-z0-9._\-]+">
+          <span class="hint">User name or email address</span>
+          <input v-model="draft.account" class="input" required maxlength="120" placeholder="e.g. SonTV16 or sontv16@fpt.com"
+            pattern="[A-Za-z0-9._\-]+|[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}"
+            title="A user name (letters, digits, . _ -) or an email address">
         </label>
         <label class="field">Display name <span class="req">*</span><input v-model="draft.displayName" class="input" required></label>
         <label class="field full">Email<input v-model="draft.email" class="input" type="email" placeholder="name@fpt.com"></label>
@@ -225,7 +250,7 @@ const status = (u: AdminUser) => !u.isActive ? 'Inactive' : !u.hasPassword ? 'No
 .role-opt.on { border-color: var(--primary); background: var(--primary-soft); }
 .role-opt input { margin-top: 3px; }
 .chip-btn { height: 34px; min-width: 48px; padding: 0 12px; border-radius: 17px; border: 1px solid var(--border-strong); background: var(--surface); font-weight: 600; font-size: 13px; cursor: pointer; }
-.chip-btn[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: #fff; }
+.chip-btn[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
 .chip-btn:disabled { opacity: .45; cursor: not-allowed; }
 .secret { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: grid; gap: 10px; font-size: 14px; }
 .pw { font-family: ui-monospace, Consolas, monospace; font-size: 18px; font-weight: 700; letter-spacing: .05em; }

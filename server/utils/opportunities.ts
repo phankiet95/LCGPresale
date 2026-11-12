@@ -95,8 +95,8 @@ export function toItem(r: Row, s: R.Settings, today: string, user: SessionUserIn
  * with every filter except market applied. The market filter is applied afterwards so
  * the same rows also produce the per-market chip counts.
  */
-export async function loadOpps(event: Parameters<typeof useDb>[0], user: SessionUserInfo, f: OppFilter) {
-  const db = useDb(event)
+export async function loadOpps(event: Parameters<typeof useDb>[0] | Db, user: SessionUserInfo, f: OppFilter) {
+  const db = 'select' in event ? event : useDb(event)
   const today = todayJst()
   const settings = await loadSettings(db, today)
   const o = tables.opportunities

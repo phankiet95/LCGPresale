@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { OPEN_STAGES, STAGE_LABEL } from '#shared/constants'
+import { FilePlus2 } from 'lucide-vue-next'
 
 useHead({ title: 'New opportunity · LCG Opportunity' })
 const { $api } = useNuxtApp()
@@ -127,8 +128,8 @@ async function save(confirmDuplicate = false) {
   <div class="page-head">
     <div>
       <nav class="small muted"><NuxtLink to="/pipeline" style="text-decoration: none">Pipeline</NuxtLink> / New</nav>
-      <h1>New opportunity</h1>
-      <div class="sub">The code (OPP-YYYY-NNN) is assigned on save. Yellow fields feed warnings when empty.</div>
+      <PageTitle :icon="FilePlus2" title="New opportunity" />
+      <div class="sub indent">The code (OPP-YYYY-NNN) is assigned on save. Yellow fields feed warnings when empty.</div>
     </div>
   </div>
 

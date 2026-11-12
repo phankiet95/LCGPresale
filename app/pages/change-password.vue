@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { KeyRound } from 'lucide-vue-next'
 definePageMeta({ layout: 'auth' })
 useHead({ title: 'Change password · LCG Opportunity' })
 
@@ -33,7 +34,7 @@ async function submit() {
 <template>
   <form class="stack" @submit.prevent="submit">
     <div>
-      <h1 style="font-size: 20px">{{ forced ? 'Set your password' : 'Change password' }}</h1>
+      <PageTitle :icon="KeyRound" :title="forced ? 'Set your password' : 'Change password'" size="md" style="font-size: 20px" />
       <p v-if="forced" class="muted" style="margin: 6px 0 0; font-size: 13px">
         You are using a temporary password from your Admin. Choose your own to continue.
       </p>

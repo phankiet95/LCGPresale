@@ -17,9 +17,16 @@ export default defineNuxtConfig({
     head: {
       title: 'LCG Opportunity Management',
       htmlAttrs: { lang: 'en' },
+      meta: [{ name: 'color-scheme', content: 'light dark' }],
+      // Apply the saved theme before first paint (no light flash in dark mode). Mirrors app/composables/useTheme.ts.
+      script: [{
+        tagPosition: 'head',
+        innerHTML: `(function(){var t;try{t=localStorage.getItem('lcg.theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t})()`,
+      }],
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap' },
       ],
     },
   },

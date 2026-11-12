@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { LogIn } from 'lucide-vue-next'
 definePageMeta({ layout: 'auth' })
 useHead({ title: 'Log in · LCG Opportunity' })
 
@@ -30,9 +31,9 @@ async function submit() {
 
 <template>
   <form class="stack" @submit.prevent="submit">
-    <h1 style="font-size: 20px">Log in</h1>
+    <PageTitle :icon="LogIn" title="Log in" size="md" style="font-size: 20px" />
     <label class="field">Account
-      <input v-model="account" class="input" autocomplete="username" required autofocus placeholder="e.g. SonTV16">
+      <input v-model="account" class="input" autocomplete="username" required autofocus placeholder="e.g. SonTV16 or sontv16@fpt.com">
     </label>
     <label class="field">Password
       <input v-model="password" class="input" type="password" autocomplete="current-password" required>

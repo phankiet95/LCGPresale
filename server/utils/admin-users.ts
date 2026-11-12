@@ -4,7 +4,11 @@ import type { AdminUser } from '#shared/types'
 import { ROLES } from '../database/schema'
 
 export const UserFields = z.object({
-  account: z.string().trim().min(2).max(60).regex(/^[A-Za-z0-9._-]+$/, 'Letters, digits, dot, dash, underscore only'),
+  // A plain user name (SonTV16) or an email address (sontv16@fpt.com)
+  account: z.string().trim().min(2).max(120).regex(
+    /^(?:[A-Za-z0-9._-]+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})$/,
+    'Account must be a user name (letters, digits, . _ -) or an email address',
+  ),
   displayName: z.string().trim().min(1).max(100),
   email: z.string().trim().email().max(120).nullish().or(z.literal('').transform(() => null)),
   role: z.enum(ROLES),

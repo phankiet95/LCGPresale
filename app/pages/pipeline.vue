@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { OppItem, OppListResponse } from '#shared/types'
 import { WARNING_META, type WarningCode } from '#shared/rules'
-import { STAGE_SHORT, WARNING_LABEL } from '#shared/constants'
+import { HEALTH_BUCKET, STAGE_SHORT, WARNING_LABEL } from '#shared/constants'
+import { BriefcaseBusiness, Download, Info, Plus, SearchX, SquarePen } from 'lucide-vue-next'
 
 useHead({ title: 'Pipeline · LCG Opportunity' })
 const { $api } = useNuxtApp()
@@ -37,27 +38,27 @@ const tab = computed<TabId>(() => (tabs.some(t => t.id === route.query.tab) ? ro
 const warning = computed(() => (typeof route.query.warning === 'string' ? route.query.warning as WarningCode : null))
 const setTab = (id: TabId) => router.replace({ query: { ...route.query, tab: id === 'all' ? undefined : id, warning: undefined } })
 
-type SortKey = 'amountUsd' | 'expectedCloseDate' | 'daysSinceUpdate' | 'oppCode' | 'winRate'
-const sortKey = ref<SortKey>('amountUsd')
-const sortDir = ref<1 | -1>(-1)
-function sortBy(k: SortKey) {
-  if (sortKey.value === k) sortDir.value = sortDir.value === 1 ? -1 : 1
-  else { sortKey.value = k; sortDir.value = k === 'expectedCloseDate' || k === 'oppCode' ? 1 : -1 }
-}
-const arrow = (k: SortKey) => (sortKey.value === k ? (sortDir.value === 1 ? ' ▴' : ' ▾') : '')
 
 const base = computed(() => data.value?.items ?? [])
 const counts = computed(() => Object.fromEntries(tabs.map(t => [t.id, base.value.filter(t.f).length])))
-const rows = computed(() => {
-  const f = tabs.find(t => t.id === tab.value)!.f
-  let list = base.value.filter(f)
-  if (warning.value) list = base.value.filter(o => o.warnings.includes(warning.value!))
-  const k = sortKey.value
-  return [...list].sort((a, b) => {
-    const av = a[k] ?? (k === 'daysSinceUpdate' ? 1e9 : ''), bv = b[k] ?? (k === 'daysSinceUpdate' ? 1e9 : '')
-    return (av < bv ? -1 : av > bv ? 1 : 0) * sortDir.value
-  })
+const filtered = computed(() => {
+  if (warning.value) return base.value.filter(o => o.warnings.includes(warning.value!))
+  return base.value.filter(tabs.find(t => t.id === tab.value)!.f)
 })
+const STAGE_RANK = { O: 0, D: 1, C: 2, B: 3, A: 4, W: 5, L: 6 } as const
+const HEALTH_RANK = { Red: 0, Amber: 1, Green: 2, Closed: 3 } as const
+const sort = useTableSort(filtered, {
+  key: 'amountUsd', dir: -1,
+  descFirst: ['amountUsd', 'winRate', 'daysSinceUpdate', 'warnings'],
+  get: {
+    stage: o => STAGE_RANK[o.stage],
+    health: o => HEALTH_RANK[HEALTH_BUCKET(o.health)],
+    daysSinceUpdate: o => o.daysSinceUpdate ?? 1e9,
+    warnings: o => o.warnings.length,
+  },
+})
+const rows = sort.rows
+const isRed = (o: OppItem) => HEALTH_BUCKET(o.health) === 'Red' || o.warnings.includes('W3')
 const pipelineUsd = computed(() => rows.value.filter(o => o.status !== 'Closed').reduce((s, o) => s + o.amountUsd, 0))
 
 // Quick Update: button per row, or select a row and press "U" (SRS S4)
@@ -107,15 +108,15 @@ function exportCsv() {
 <template>
   <div class="page-head">
     <div>
-      <h1>Pipeline</h1>
-      <div class="sub">
+      <PageTitle :icon="BriefcaseBusiness" title="Pipeline" />
+      <div class="sub indent">
         {{ rows.length }} opps · pipeline {{ fmtUsd(pipelineUsd) }} ·
         {{ filter.market?.length ? `Markets: ${filter.market.join(', ')}` : 'All your markets' }}
       </div>
     </div>
     <div class="row">
-      <button type="button" class="btn" title="CSV opens in Excel; the Excel template export comes later" @click="exportCsv">Export CSV</button>
-      <NuxtLink to="/opportunities/new" class="btn btn-primary">+ New Opp</NuxtLink>
+      <button type="button" class="btn" title="CSV opens in Excel; the Excel template export comes later" @click="exportCsv"><Download class="ico" aria-hidden="true" />Export CSV</button>
+      <NuxtLink to="/opportunities/new" class="btn btn-primary"><Plus class="ico" aria-hidden="true" />New Opp</NuxtLink>
     </div>
   </div>
 
@@ -135,25 +136,25 @@ function exportCsv() {
     <table class="data" style="min-width: 1180px">
       <thead>
         <tr>
-          <th class="sortable" @click="sortBy('oppCode')">Code{{ arrow('oppCode') }}</th>
-          <th>Opportunity · Customer</th>
-          <th>Mkt</th>
-          <th>Partner</th>
-          <th>Stage</th>
-          <th class="num sortable" @click="sortBy('amountUsd')">Amount{{ arrow('amountUsd') }}</th>
-          <th class="num sortable" @click="sortBy('winRate')">Win{{ arrow('winRate') }}</th>
-          <th>Owner</th>
-          <th class="sortable" @click="sortBy('daysSinceUpdate')">Latest activity{{ arrow('daysSinceUpdate') }}</th>
-          <th class="sortable" @click="sortBy('expectedCloseDate')">Close{{ arrow('expectedCloseDate') }}</th>
-          <th>Health</th>
-          <th>Warnings</th>
+          <SortTh :sort="sort" k="oppCode">Code</SortTh>
+          <SortTh :sort="sort" k="name">Opportunity · Customer</SortTh>
+          <SortTh :sort="sort" k="marketCode">Mkt</SortTh>
+          <SortTh :sort="sort" k="partner">Partner</SortTh>
+          <SortTh :sort="sort" k="stage">Stage</SortTh>
+          <SortTh :sort="sort" k="amountUsd" num>Amount</SortTh>
+          <SortTh :sort="sort" k="winRate" num>Win</SortTh>
+          <SortTh :sort="sort" k="salesOwner">Owner</SortTh>
+          <SortTh :sort="sort" k="daysSinceUpdate">Latest activity</SortTh>
+          <SortTh :sort="sort" k="expectedCloseDate">Close</SortTh>
+          <SortTh :sort="sort" k="health">Health</SortTh>
+          <SortTh :sort="sort" k="warnings">Warnings</SortTh>
           <th><span class="sr-only">Actions</span></th>
         </tr>
       </thead>
       <tbody>
         <tr
           v-for="o in rows" :key="o.id"
-          :class="{ overdue: o.warnings.includes('W3'), selected: selected === o.id }"
+          :class="{ 'row-red': isRed(o), selected: selected === o.id }"
           @click="selected = o.id"
         >
           <td class="muted" style="white-space: nowrap">{{ o.oppCode }}</td>
@@ -161,7 +162,7 @@ function exportCsv() {
             <NuxtLink :to="`/opportunities/${o.oppCode}`" style="font-weight: 600; text-decoration: none; color: var(--text)">{{ o.name }}</NuxtLink>
             <div class="muted">{{ o.customer }}</div>
           </td>
-          <td style="font-weight: 600">{{ o.marketCode }}</td>
+          <td><span class="mkt-cell"><MarketFlag :code="o.marketCode" />{{ o.marketCode }}</span></td>
           <td>{{ o.partner }}</td>
           <td style="white-space: nowrap">
             <span class="badge">{{ STAGE_SHORT[o.stage] }}</span>
@@ -178,15 +179,15 @@ function exportCsv() {
           <td><HealthBadge :health="o.health" /></td>
           <td><WarningBadges :codes="o.warnings" /></td>
           <td>
-            <button v-if="o.canEdit" type="button" class="btn btn-outline-primary" @click.stop="updating = o">Update</button>
+            <button v-if="o.canEdit" type="button" class="btn btn-outline-primary" @click.stop="updating = o"><SquarePen class="ico" aria-hidden="true" />Update</button>
           </td>
         </tr>
-        <tr v-if="!rows.length"><td colspan="13" class="muted">No opportunities match.</td></tr>
+        <tr v-if="!rows.length"><td colspan="13"><div class="empty"><SearchX class="ico" aria-hidden="true" />No opportunities match these filters.</div></td></tr>
       </tbody>
     </table>
   </div>
-  <p class="small muted" style="margin: 0">
-    Light-red rows = past Expected Close (W3). Hover a warning code for its name. Select a row and press <kbd>U</kbd> for Quick Update.
+  <p class="small muted row" style="margin: 0; gap: 6px">
+    <Info class="ico" aria-hidden="true" />Light-red rows = Red health or past Expected Close (W3). Hover a warning code for its name. Select a row and press <kbd>U</kbd> for Quick Update.
     Calculated on {{ data?.today }} (JST).
   </p>
 

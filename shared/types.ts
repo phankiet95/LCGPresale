@@ -172,3 +172,82 @@ export interface AdminUser {
   markets: string[]
   ownedOpps: number
 }
+
+// ---------------------------------------------------------------- Reports (SRS §7)
+export type StateSource = 'live' | 'snapshot' | 'missing'
+
+export interface SummaryRow {
+  key: string
+  label: string
+  money: boolean
+  current: number | null
+  previous: number | null
+  /** extra pipeline query for the drill-down link */
+  link?: Record<string, string>
+}
+
+export interface MarketHealthRow {
+  code: string
+  active: number
+  onHold: number
+  won: number
+  lost: number
+  pipelineUsd: number
+  weightedUsd: number
+  pctGreen: number | null
+  pctVerified: number | null
+}
+
+export interface RecommendationItem {
+  id: number
+  weekStart: string
+  marketCode: string | null
+  finding: string
+  impact: string | null
+  recommendation: string | null
+  ownerId: number | null
+  owner: string | null
+  targetDate: string | null
+  createdBy: string | null
+  canEdit: boolean
+}
+
+export interface WeeklyReportResponse {
+  today: string
+  week: { start: string, end: string, isCurrent: boolean }
+  weeks: string[]
+  marketCounts: Record<string, number>
+  /** where the end-of-week state comes from, and whether the start-of-week snapshot exists */
+  source: { end: StateSource, start: boolean, latestSnapshot: string | null }
+  summary: SummaryRow[]
+  changes: { newOpps: number, won: number, lost: number, stageUp: number, stageDown: number, slipped: number, pipelineDeltaUsd: number | null }
+  highlights: { opp: OppItem, reasons: HighlightReason[] }[]
+  marketHealth: MarketHealthRow[]
+  warningList: OppItem[]
+  topMgmt: { opp: OppItem, changes: string[] }[]
+  topMgmtUsd: number
+  projectVsLicense: { dealType: string, open: number, pipelineUsd: number, weightedUsd: number, wonInWeek: number }[]
+  recommendations: RecommendationItem[]
+  canAddRecommendation: boolean
+  recommendationMarkets: string[]
+}
+
+export interface MonthlyReportResponse {
+  today: string
+  month: { key: string, start: string, end: string, isCurrent: boolean }
+  months: string[]
+  marketCounts: Record<string, number>
+  source: StateSource
+  byMarket: { code: string, created: number, won: number, lost: number, wonUsd: number, open: number | null, pipelineUsd: number | null }[]
+  byPartner: { name: string, count: number, pipelineUsd: number, avgWinRate: number }[]
+  trend: SummaryRow[]
+  series: { key: string, created: number, won: number, lost: number, wonUsd: number }[]
+  pipelineWeeks: { weekStart: string, pipelineUsd: number, weightedUsd: number }[]
+  funnel: { stage: Stage, reached: number, conversion: number | null }[]
+  risk: { key: string, label: string, opps: OppItem[] }[]
+  winLoss: {
+    month: { won: number, lost: number, wonUsd: number, lostUsd: number, winRate: number | null }
+    ytd: { won: number, lost: number, wonUsd: number, lostUsd: number, winRate: number | null }
+    reasons: { reason: string, count: number, usd: number }[]
+  }
+}

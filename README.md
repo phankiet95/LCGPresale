@@ -82,6 +82,28 @@ Excel owners imported by the seed start **inactive with no password**. Admin →
 - **S4 Quick Update** drawer: from the row button or the `U` key. Follows SRS 5.9.
 - **New opportunity**: customer search or quick-create, live duplicate warning (SRS 5.11), atomic OPP-YYYY-NNN numbering.
 - **My Actions**.
+- **S5 Weekly Report** (SRS 7.1): pick a week (‹ › or the list). It has seven sections:
+  1. Summary with a last-week column and Δ.
+  2. "What changed" counts: new, won, lost, stage up/down, slipped close date, pipeline Δ.
+  3. Highlight.
+  4. Market health with % Green and % Verified.
+  5. Warning list.
+  6. Top management concerns, with each opp's changes this week.
+  7. Recommendations stored per week and market (Admin, Market Lead and Sales can add them), and Project vs License.
+- **S6 Monthly Report** (SRS 7.2): pick a month. It shows:
+  - KPIs vs the previous month.
+  - 6-month New / Won / Lost charts.
+  - Pipeline by week from snapshots.
+  - KPI by market and by partner.
+  - The O→W funnel with conversion rates, from stage history.
+  - Risk lists, plus win/loss with lost reasons.
+- **Weekly snapshot** (SRS 5.12): a Cloudflare cron trigger (`5 15 * * SUN` = Monday 00:05 JST) runs
+  `server/plugins/weekly-snapshot.ts`. On the Weekly Report, Admin can also take this week's baseline right away.
+  - New, Won, Lost, stage moves and close-date slips come from the records, so they work for any week.
+  - Last-week columns for open opps, pipeline and weighted need snapshots, so those columns fill in from the first Monday on.
+- **Print / PDF** on both reports, with a print stylesheet set to A4 landscape.
+- **Motion**: page blocks and cards fade in one after another, numbers count up, bars grow, modals pop and the drawer slides in, with a loading bar between pages.
+  All of it switches off when the OS asks for reduced motion.
 
 ### Decisions worth knowing
 - **SPA (`ssr: false`)**: this is an internal tool behind a login, and SPA mode avoids SSR-internal fetches losing the D1 binding.
@@ -90,5 +112,5 @@ Excel owners imported by the seed start **inactive with no password**. Admin →
 - Export is CSV for now (it opens in Excel). The Excel template layout (A–AN) is still to do.
 
 ### Not built yet
-Weekly / Monthly reports and the Monday snapshot job (the tables already exist) · Kanban · Excel import screen
+Excel export of the reports (Print/PDF works) · Kanban · Excel import screen
 · master data / FX / threshold screens · opp merge · login rate-limiting · i18n (JA).

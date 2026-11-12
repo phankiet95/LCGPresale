@@ -1,4 +1,3 @@
-import { and, gte, inArray, lte } from 'drizzle-orm'
 import * as R from '#shared/rules'
 import type { DashboardResponse, OppItem } from '#shared/types'
 import { HEALTH_BUCKET, MARKET_CODES } from '#shared/constants'
@@ -43,27 +42,7 @@ export default defineEventHandler(async (event): Promise<DashboardResponse> => {
   const warnCodes: R.WarningCode[] = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7']
 
   // Highlight of the week (SRS 5.7): scheduled key activities / due dates / pinned in [Mon, next Sun]
-  const [from, to] = R.highlightWindow(today)
-  const db = useDb(event)
-  const ids = open.map(i => i.id)
-  const acts = ids.length
-    ? await db.select({ oppId: tables.activities.oppId, date: tables.activities.activityDate, type: tables.activities.type })
-        .from(tables.activities)
-        .where(and(inArray(tables.activities.oppId, ids), gte(tables.activities.activityDate, from), lte(tables.activities.activityDate, to)))
-    : []
-  const codeById = new Map(open.map(i => [i.id, i.oppCode]))
-  const ruleActs: R.Activity[] = acts.map(a => ({ opp_code: codeById.get(a.oppId)!, activity_date: a.date, type: a.type, content: '' }))
-  const highlights = open
-    .map(i => ({
-      opp: i,
-      reasons: R.highlightReasons({
-        opp_code: i.oppCode, name: i.name, customer: i.customer, market_code: i.marketCode, partner: i.partner,
-        sales_owner: i.salesOwner, amount: i.amount, currency: i.currency, status: i.status, stage: i.stage,
-        due_date: i.dueDate, next_action: i.nextAction, is_focus_pinned: i.isFocusPinned,
-      }, ruleActs, today, settings),
-    }))
-    .filter(h => h.reasons.length)
-    .sort((a, b) => a.reasons[0]!.date.localeCompare(b.reasons[0]!.date))
+  const highlights = await computeHighlights(useDb(event), open, today, settings)
 
   const top10: OppItem[] = [...open]
     .sort((a, b) => b.amountUsd - a.amountUsd || a.expectedCloseDate.localeCompare(b.expectedCloseDate))
