@@ -184,15 +184,9 @@ const printPage = () => window.print()
     <!-- 2. Highlight -->
     <section class="card stack" style="gap: 12px">
       <div class="row" style="justify-content: space-between">
-        <h2 class="h-ico"><Sparkles class="ico" aria-hidden="true" />2 · Highlight: focus this week &amp; next</h2>
-        <span class="small muted">due dates · customer meetings · proposals · demos · seminars · pinned</span>
+        <h2 class="h-ico"><Sparkles class="ico" aria-hidden="true" />2 · Highlight of the week</h2>
       </div>
-      <p v-if="!data.highlights.length" class="muted small" style="margin: 0">Nothing scheduled in this window.</p>
-      <div v-for="h in data.highlights" :key="h.opp.id" class="hl-row">
-        <NuxtLink :to="`/opportunities/${h.opp.oppCode}`" class="strong-link">{{ h.opp.name }}</NuxtLink>
-        <span class="muted small">{{ h.opp.customer }} · {{ h.opp.marketCode }} · {{ h.opp.salesOwner }}</span>
-        <span class="row" style="gap: 6px"><span v-for="(r, i) in h.reasons" :key="i" class="badge">{{ fmtDay(r.date) }} · {{ r.reason }}</span></span>
-      </div>
+      <HighlightList :items="data.highlights" :period="data.highlightPeriod" />
     </section>
 
     <!-- 3. Market health -->

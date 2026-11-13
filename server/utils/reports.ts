@@ -1,6 +1,7 @@
 import { and, eq, gte, inArray, lte } from 'drizzle-orm'
 import * as R from '#shared/rules'
 import type { OppItem, SessionUserInfo } from '#shared/types'
+import { highlightTags, reportPeriod } from '#shared/highlight'
 
 /** Used by the Monday job: sees every market. */
 export const SYSTEM_USER: SessionUserInfo = {
@@ -88,30 +89,17 @@ export function periodEvents(items: OppItem[], from: string, to: string) {
   }
 }
 
-/** Highlight (SRS 5.7) for the window around `ref` (this week + next). */
-export async function computeHighlights(db: Db, open: OppItem[], ref: string, settings: R.Settings) {
-  const [from, to] = R.highlightWindow(ref)
-  // Filter opps in JS: D1 allows only 100 bound parameters, so no `IN (…ids)`.
-  const ids = new Set(open.map(i => i.id))
-  const acts = ids.size
-    ? (await db.select({ oppId: tables.activities.oppId, date: tables.activities.activityDate, type: tables.activities.type })
-        .from(tables.activities)
-        .where(and(gte(tables.activities.activityDate, from), lte(tables.activities.activityDate, to))))
-        .filter(a => ids.has(a.oppId))
-    : []
-  const codeById = new Map(open.map(i => [i.id, i.oppCode]))
-  const ruleActs: R.Activity[] = acts.map(a => ({ opp_code: codeById.get(a.oppId)!, activity_date: a.date, type: a.type, content: '' }))
-  return open
-    .map(i => ({
-      opp: i,
-      reasons: R.highlightReasons({
-        opp_code: i.oppCode, name: i.name, customer: i.customer, market_code: i.marketCode, partner: i.partner,
-        sales_owner: i.salesOwner, amount: i.amount, currency: i.currency, status: i.status, stage: i.stage,
-        due_date: i.dueDate, next_action: i.nextAction, is_focus_pinned: i.isFocusPinned,
-      }, ruleActs, ref, settings),
-    }))
-    .filter(h => h.reasons.length)
-    .sort((a, b) => a.reasons[0]!.date.localeCompare(b.reasons[0]!.date))
+/**
+ * Highlight of the week (Sales-team rule, shared/highlight.ts): open opps created in the report period
+ * (previous Thursday < created <= report Thursday) or with revenue > $200K. `ref` picks the report: the Thursday on/after it.
+ */
+export function computeHighlights(open: OppItem[], ref: string) {
+  const period = reportPeriod(ref)
+  const items = open
+    .map(opp => ({ opp, tags: highlightTags(opp, period) }))
+    .filter(h => h.tags.length)
+    .sort((x, y) => Number(y.tags.some(t => t.kind === 'new')) - Number(x.tags.some(t => t.kind === 'new')) || y.opp.amountUsd - x.opp.amountUsd)
+  return { period, items }
 }
 
 /** Warning List order (SRS 7.1 §4): High-severity count ↓, amount ↓, days without update ↓. */

@@ -1,4 +1,5 @@
-import type { DealSize, Health, HighlightReason, Role, Stage, Status, WarningCode } from './rules'
+import type { DealSize, Health, Role, Stage, Status, WarningCode } from './rules'
+import type { HighlightTag, ReportPeriod } from './highlight'
 
 export interface SessionUserInfo {
   id: number
@@ -73,6 +74,7 @@ export interface OppItem {
   isKeyDeal: boolean
   isTopMgmt: boolean
   canEdit: boolean
+  canDelete: boolean
 }
 
 export interface OppFilter {
@@ -83,9 +85,12 @@ export interface OppFilter {
   dealType?: string[]
   health?: string[]
   q?: string
-  closeFrom?: string
-  closeTo?: string
+  /** which date the from/to range applies to (default: expected close) */
+  dateBy?: DateField
+  dateFrom?: string
+  dateTo?: string
 }
+export type DateField = 'close' | 'created' | 'update'
 
 export interface OppListResponse {
   today: string
@@ -124,12 +129,14 @@ export interface OppDetailResponse {
   opp: OppItem
   activities: ActivityItem[]
   history: HistoryItem[]
-  highlights: HighlightReason[]
+  highlights: HighlightTag[]
   permissions: { canEdit: boolean, canReopen: boolean, canChangeMarket: boolean, canDelete: boolean }
 }
 
 export interface MetaResponse {
   markets: { code: string, name: string }[]
+  /** every active market; inScope = the user may see it (filter bar shows the others greyed out) */
+  allMarkets: { code: string, name: string, inScope: boolean }[]
   countries: { id: number, marketCode: string, name: string }[]
   partners: { id: number, name: string }[]
   users: { id: number, account: string, displayName: string, isActive: boolean }[]
@@ -156,7 +163,8 @@ export interface DashboardResponse {
   health: Record<'Green' | 'Amber' | 'Red', number>
   warnings: { code: WarningCode, count: number }[]
   top10: OppItem[]
-  highlights: { opp: OppItem, reasons: HighlightReason[] }[]
+  highlights: { opp: OppItem, tags: HighlightTag[] }[]
+  highlightPeriod: ReportPeriod
 }
 
 export interface AdminUser {
@@ -221,7 +229,8 @@ export interface WeeklyReportResponse {
   source: { end: StateSource, start: boolean, latestSnapshot: string | null }
   summary: SummaryRow[]
   changes: { newOpps: number, won: number, lost: number, stageUp: number, stageDown: number, slipped: number, pipelineDeltaUsd: number | null }
-  highlights: { opp: OppItem, reasons: HighlightReason[] }[]
+  highlights: { opp: OppItem, tags: HighlightTag[] }[]
+  highlightPeriod: ReportPeriod
   marketHealth: MarketHealthRow[]
   warningList: OppItem[]
   topMgmt: { opp: OppItem, changes: string[] }[]

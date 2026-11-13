@@ -2,7 +2,7 @@ import type { OppFilter } from '#shared/types'
 import { parseFilterQuery, toFilterQuery } from '#shared/filters'
 
 const STORAGE_KEY = 'lcg.filters'
-const FILTER_KEYS = ['market', 'partner', 'owner', 'stage', 'dealType', 'health', 'q', 'closeFrom', 'closeTo']
+const FILTER_KEYS = ['market', 'partner', 'owner', 'stage', 'dealType', 'health', 'q', 'dateBy', 'dateFrom', 'dateTo', 'closeFrom', 'closeTo']
 
 /**
  * Global filter (SRS 5.10): lives in the URL so links share the same view,

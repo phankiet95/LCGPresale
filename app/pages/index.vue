@@ -3,7 +3,7 @@ import type { DashboardResponse } from '#shared/types'
 import { WARNING_META } from '#shared/rules'
 import { HEALTH_BUCKET, STAGE_SHORT, WARNING_LABEL } from '#shared/constants'
 import type { OppItem } from '#shared/types'
-import { ArrowRight, CalendarCheck, CalendarX2, LayoutDashboard, PartyPopper, SearchX, CircleDollarSign, CirclePause, Earth, Handshake, HeartPulse, Hourglass, Plus, Sparkles, Target, TriangleAlert, Trophy } from 'lucide-vue-next'
+import { ArrowRight, CalendarX2, LayoutDashboard, PartyPopper, SearchX, CircleDollarSign, CirclePause, Earth, Handshake, HeartPulse, Hourglass, Plus, Sparkles, Target, TriangleAlert, Trophy } from 'lucide-vue-next'
 
 useHead({ title: 'Dashboard · LCG Opportunity' })
 const { $api } = useNuxtApp()
@@ -114,20 +114,10 @@ const isRed = (o: OppItem) => HEALTH_BUCKET(o.health) === 'Red' || o.warnings.in
 
     <section class="card stack" style="gap: 12px">
       <div class="row" style="justify-content: space-between">
-        <h2 class="h-ico"><Sparkles class="ico" aria-hidden="true" />Highlight this week &amp; next</h2>
+        <h2 class="h-ico"><Sparkles class="ico" aria-hidden="true" />Highlight of the week</h2>
         <NuxtLink :to="pipelineLink({ tab: 'highlight' })" class="small more">Open in Pipeline<ArrowRight class="ico" aria-hidden="true" /></NuxtLink>
       </div>
-      <div v-if="!data.highlights.length" class="empty">
-        <CalendarCheck class="ico" aria-hidden="true" />
-        Nothing scheduled: no due dates, customer meetings, proposal submissions, demos or seminars in this window, and no pinned opps.
-      </div>
-      <div v-for="h in data.highlights" :key="h.opp.id" class="hl-row">
-        <NuxtLink :to="`/opportunities/${h.opp.oppCode}`" style="font-weight: 600; text-decoration: none; color: var(--text)">{{ h.opp.name }}</NuxtLink>
-        <span class="muted small">{{ h.opp.customer }} · {{ h.opp.marketCode }}</span>
-        <span class="row" style="gap: 6px">
-          <span v-for="(r, i) in h.reasons" :key="i" class="badge">{{ r.date.slice(5) }} · {{ r.reason }}</span>
-        </span>
-      </div>
+      <HighlightList :items="data.highlights" :period="data.highlightPeriod" />
     </section>
 
     <section class="card stack" style="gap: 12px">

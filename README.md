@@ -105,6 +105,18 @@ Excel owners imported by the seed start **inactive with no password**. Admin →
 - **Motion**: page blocks and cards fade in one after another, numbers count up, bars grow, modals pop and the drawer slides in, with a loading bar between pages.
   All of it switches off when the OS asks for reduced motion.
 
+### Sales-team feedback (2026-11-13)
+- **Highlight of the week** replaces SRS 5.7. An open opp is highlighted if either:
+  - it was **created in the report period** (previous Thursday < created ≤ report Thursday), or
+  - its **revenue is above $200K**.
+
+  The report date is the Thursday on or after today; a past week's report uses that week's Thursday. The code is in `shared/highlight.ts`.
+- **Delete** is a soft delete (`deleted_at` + an audit row with the reason). Who can delete: Admin, the Market Lead of that market, or the Sales who own or created the opp.
+  Edit and Delete are on every Pipeline row and on the detail page.
+- **Date range filter**: choose Expected close, Created or Last update, then a from–to range. It's kept in the URL (`dateBy`, `dateFrom`, `dateTo`).
+- **Market chips**: every market is always shown. Markets with no opp are grey, and markets outside the user's scope are greyed out and disabled.
+- **New partners**: Intra-mart and Workato, in migration `0002_partners_intramart_workato.sql`.
+
 ### Decisions worth knowing
 - **SPA (`ssr: false`)**: this is an internal tool behind a login, and SPA mode avoids SSR-internal fetches losing the D1 binding.
 - The automatic "Stage C → B" Internal activity (SRS 5.8) is stored with `source = 'system'`. It does **not** refresh Latest Update Date, so changing a stage cannot turn an opp Green without a real follow-up.

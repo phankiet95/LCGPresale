@@ -1,6 +1,7 @@
 import { asc, desc, eq } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import * as R from '#shared/rules'
+import { highlightTags, reportPeriod } from '#shared/highlight'
 import type { HistoryItem, OppDetailResponse } from '#shared/types'
 
 export default defineEventHandler(async (event): Promise<OppDetailResponse> => {
@@ -40,11 +41,7 @@ export default defineEventHandler(async (event): Promise<OppDetailResponse> => {
   ].sort((x, y) => y.changedAt.localeCompare(x.changedAt))
 
   const ruleActs: R.Activity[] = acts.map(x => ({ opp_code: item.oppCode, activity_date: x.activityDate, type: x.type, content: x.content }))
-  const highlights = R.highlightReasons({
-    opp_code: item.oppCode, name: item.name, customer: item.customer, market_code: item.marketCode, partner: item.partner,
-    sales_owner: item.salesOwner, amount: item.amount, currency: item.currency, status: item.status, stage: item.stage,
-    due_date: item.dueDate, next_action: item.nextAction, is_focus_pinned: item.isFocusPinned,
-  }, ruleActs, today, settings)
+  const highlights = highlightTags(item, reportPeriod(today))
 
   return {
     today,
@@ -56,7 +53,7 @@ export default defineEventHandler(async (event): Promise<OppDetailResponse> => {
       canEdit: item.canEdit,
       canReopen: canReopen(user) && canSeeMarket(user, item.marketCode),
       canChangeMarket: user.role === 'admin',
-      canDelete: user.role === 'admin',
+      canDelete: item.canDelete,
     },
   }
 })

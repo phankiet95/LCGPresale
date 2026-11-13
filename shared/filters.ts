@@ -13,8 +13,13 @@ export function parseFilterQuery(query: Record<string, unknown>): OppFilter {
     if (list.length) (f as Record<string, string[]>)[k] = list
   }
   if (typeof query.q === 'string' && query.q.trim()) f.q = query.q.trim()
-  if (typeof query.closeFrom === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(query.closeFrom)) f.closeFrom = query.closeFrom
-  if (typeof query.closeTo === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(query.closeTo)) f.closeTo = query.closeTo
+  const iso = (v: unknown) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined)
+  // older links used closeFrom / closeTo
+  f.dateFrom = iso(query.dateFrom) ?? iso(query.closeFrom)
+  f.dateTo = iso(query.dateTo) ?? iso(query.closeTo)
+  if (!f.dateFrom) delete f.dateFrom
+  if (!f.dateTo) delete f.dateTo
+  if (query.dateBy === 'created' || query.dateBy === 'update') f.dateBy = query.dateBy
   if (f.stage) f.stage = f.stage.filter((s): s is Stage => 'ODCBAWL'.includes(s) && s.length === 1)
   return f
 }
@@ -26,7 +31,8 @@ export function toFilterQuery(f: OppFilter): Record<string, string> {
     if (v?.length) q[k] = v.join(',')
   }
   if (f.q) q.q = f.q
-  if (f.closeFrom) q.closeFrom = f.closeFrom
-  if (f.closeTo) q.closeTo = f.closeTo
+  if (f.dateFrom) q.dateFrom = f.dateFrom
+  if (f.dateTo) q.dateTo = f.dateTo
+  if (f.dateBy && f.dateBy !== 'close') q.dateBy = f.dateBy
   return q
 }

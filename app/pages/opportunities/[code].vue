@@ -2,7 +2,7 @@
 import type { OppDetailResponse } from '#shared/types'
 import { WARNING_META } from '#shared/rules'
 import { OPEN_STAGES, STAGE_SHORT, WARNING_LABEL } from '#shared/constants'
-import { BriefcaseBusiness } from 'lucide-vue-next'
+import { BriefcaseBusiness, Pencil, Trash2 } from 'lucide-vue-next'
 import type { TransitionAction } from '~/components/TransitionDialog.vue'
 
 const route = useRoute()
@@ -15,7 +15,8 @@ useHead({ title: () => `${code.value} · LCG Opportunity` })
 const opp = computed(() => data.value?.opp)
 const perms = computed(() => data.value?.permissions)
 const tab = ref<'overview' | 'activity' | 'history'>('overview')
-const dialog = ref<null | 'update' | 'edit' | TransitionAction>(null)
+const dialog = ref<null | 'update' | 'edit' | 'delete' | TransitionAction>(null)
+const onDeleted = () => navigateTo('/pipeline')
 async function done() {
   dialog.value = null
   await refresh()
@@ -71,7 +72,8 @@ const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s =
           <button type="button" class="btn btn-success" @click="dialog = 'won'">Mark Won</button>
         </template>
         <button v-if="opp.status === 'Closed' && perms.canReopen" type="button" class="btn" @click="dialog = 'reopen'">Reopen</button>
-        <button v-if="perms.canEdit" type="button" class="btn" @click="dialog = 'edit'">Edit</button>
+        <button v-if="perms.canDelete" type="button" class="btn btn-danger" title="Delete this opportunity" @click="dialog = 'delete'"><Trash2 class="ico" aria-hidden="true" />Delete</button>
+        <button v-if="perms.canEdit" type="button" class="btn" @click="dialog = 'edit'"><Pencil class="ico" aria-hidden="true" />Edit</button>
         <button v-if="perms.canEdit" type="button" class="btn btn-primary" @click="dialog = 'update'">Quick Update</button>
       </div>
     </header>
@@ -120,7 +122,7 @@ const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s =
           </div>
         </div>
         <div v-if="data.highlights.length" class="row small">
-          <span class="muted">Highlight:</span><span v-for="(h, i) in data.highlights" :key="i" class="badge">{{ h.date.slice(5) }} · {{ h.reason }}</span>
+          <span class="muted">Highlight:</span><span v-for="h in data.highlights" :key="h.kind" class="badge" style="background: var(--primary-soft); color: var(--primary)">{{ h.label }}<template v-if="h.date"> · {{ fmtDay(h.date) }}</template></span>
         </div>
         <ol class="timeline">
           <li v-for="a in (tab === 'overview' ? data.activities.slice(0, 8) : data.activities)" :key="a.id">
@@ -185,6 +187,7 @@ const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s =
 
     <QuickUpdateDrawer v-if="dialog === 'update'" :opp="opp" :today="data.today" @close="dialog = null" @saved="done" />
     <OppEditModal v-else-if="dialog === 'edit'" :opp="opp" :can-change-market="perms.canChangeMarket" @close="dialog = null" @saved="done" />
+    <DeleteOppDialog v-else-if="dialog === 'delete'" :opp="opp" @close="dialog = null" @deleted="onDeleted" />
     <TransitionDialog v-else-if="dialog" :opp="opp" :action="dialog" :today="data.today" @close="dialog = null" @saved="done" />
   </template>
 </template>

@@ -22,6 +22,7 @@ export default defineEventHandler(async (event): Promise<MetaResponse> => {
   for (const l of lookups) (grouped[l.category] ??= []).push(l.value)
   return {
     markets: markets.filter(m => canSeeMarket(user, m.code)),
+    allMarkets: markets.map(m => ({ ...m, inScope: canSeeMarket(user, m.code) })),
     countries,
     partners,
     users,

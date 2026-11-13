@@ -42,7 +42,7 @@ export default defineEventHandler(async (event): Promise<DashboardResponse> => {
   const warnCodes: R.WarningCode[] = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7']
 
   // Highlight of the week (SRS 5.7): scheduled key activities / due dates / pinned in [Mon, next Sun]
-  const highlights = await computeHighlights(useDb(event), open, today, settings)
+  const hl = computeHighlights(open, today)
 
   const top10: OppItem[] = [...open]
     .sort((a, b) => b.amountUsd - a.amountUsd || a.expectedCloseDate.localeCompare(b.expectedCloseDate))
@@ -66,6 +66,7 @@ export default defineEventHandler(async (event): Promise<DashboardResponse> => {
     health,
     warnings: warnCodes.map(code => ({ code, count: has(code) })).filter(w => w.count),
     top10,
-    highlights,
+    highlights: hl.items,
+    highlightPeriod: hl.period,
   }
 })

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Globe, Search, SlidersHorizontal, X } from 'lucide-vue-next'
+import { CalendarRange, Globe, Search, SlidersHorizontal, X } from 'lucide-vue-next'
+import type { DateField } from '#shared/types'
 import { ALL_STAGES, STAGE_SHORT } from '#shared/constants'
 
 const props = defineProps<{ marketCounts?: Record<string, number> }>()
@@ -7,7 +8,7 @@ const { filter, set, toggleMarket, restore } = useOppFilters()
 const { data: meta } = await useMeta()
 onMounted(restore)
 
-const markets = computed(() => meta.value?.markets ?? [])
+const markets = computed(() => meta.value?.allMarkets ?? (meta.value?.markets ?? []).map(m => ({ ...m, inScope: true })))
 const totalOpen = computed(() => Object.values(props.marketCounts ?? {}).reduce((a, b) => a + b, 0))
 const owners = computed(() => meta.value?.users ?? [])
 const dealTypes = computed(() => meta.value?.lookups.deal_type ?? [])
@@ -24,10 +25,11 @@ watch(search, (v) => {
   t = setTimeout(() => set({ q: v || undefined }), 300)
 })
 const hasExtra = computed(() => !!(filter.value.partner?.length || filter.value.owner?.length || filter.value.dealType?.length
-  || filter.value.stage?.length || filter.value.health?.length || filter.value.q || filter.value.market?.length))
+  || filter.value.stage?.length || filter.value.health?.length || filter.value.q || filter.value.market?.length
+  || filter.value.dateFrom || filter.value.dateTo))
 function clearAll() {
   search.value = ''
-  set({ market: [], partner: [], owner: [], dealType: [], stage: [], health: [], q: undefined })
+  set({ market: [], partner: [], owner: [], dealType: [], stage: [], health: [], q: undefined, dateBy: undefined, dateFrom: undefined, dateTo: undefined })
 }
 </script>
 
@@ -39,7 +41,10 @@ function clearAll() {
       All <span class="cnt">{{ totalOpen }}</span>
     </button>
     <button
-      v-for="m in markets" :key="m.code" type="button" class="chip" :title="m.name"
+      v-for="m in markets" :key="m.code" type="button" class="chip"
+      :class="{ inactive: !(marketCounts?.[m.code]) }"
+      :disabled="!m.inScope"
+      :title="m.inScope ? `${m.name} · ${marketCounts?.[m.code] ?? 0} open` : `${m.name} · outside your market scope`"
       :aria-pressed="!!filter.market?.includes(m.code)" @click="toggleMarket(m.code)"
     >
       <MarketFlag :code="m.code" :size="18" />{{ m.code }} <span class="cnt">{{ marketCounts?.[m.code] ?? 0 }}</span>
@@ -71,6 +76,17 @@ function clearAll() {
       <option value="">Health: All</option>
       <option v-for="h in ['Green', 'Amber', 'Red', 'Closed']" :key="h" :value="h">{{ h }}</option>
     </select>
+    <span class="daterange" :class="{ on: filter.dateFrom || filter.dateTo }">
+      <CalendarRange class="ico" aria-hidden="true" />
+      <select class="dr-by" aria-label="Date field" :value="filter.dateBy ?? 'close'" @change="set({ dateBy: ($event.target as HTMLSelectElement).value as DateField })">
+        <option value="close">Expected close</option>
+        <option value="created">Created</option>
+        <option value="update">Last update</option>
+      </select>
+      <input type="date" class="dr-in" aria-label="From date" :value="filter.dateFrom ?? ''" :max="filter.dateTo" @change="set({ dateFrom: ($event.target as HTMLInputElement).value || undefined })">
+      <span class="muted">~</span>
+      <input type="date" class="dr-in" aria-label="To date" :value="filter.dateTo ?? ''" :min="filter.dateFrom" @change="set({ dateTo: ($event.target as HTMLInputElement).value || undefined })">
+    </span>
     <button v-if="hasExtra" type="button" class="link-btn clear" @click="clearAll"><X class="ico" aria-hidden="true" />Clear</button>
     </div>
   </section>
@@ -89,6 +105,17 @@ function clearAll() {
 .lbl .ico { width: 16px; height: 16px; }
 .clear { display: inline-flex; align-items: center; gap: 4px; }
 .clear .ico { width: 15px; height: 15px; }
+.chip.inactive { background: var(--chip); color: var(--faint); border-color: var(--border); }
+.chip.inactive :deep(.flag) { filter: grayscale(1); opacity: .55; }
+.chip.inactive .cnt { background: transparent; color: var(--faint); }
+.chip.inactive[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+.chip:disabled { cursor: not-allowed; opacity: .7; }
+.daterange { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 8px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); color: var(--muted); }
+.daterange.on { border-color: var(--primary); color: var(--primary); }
+.daterange .ico { width: 16px; height: 16px; }
+.dr-by { border: 0; background: transparent; font-size: 13px; color: var(--text-2); padding: 0 2px; cursor: pointer; }
+.dr-in { border: 0; background: transparent; font-size: 13px; color: var(--text); width: 128px; }
+.dr-by:focus, .dr-in:focus { outline: none; }
 .line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .line + .line { border-top: 1px solid var(--row-border); padding-top: 10px; }
 </style>

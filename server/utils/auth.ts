@@ -78,6 +78,15 @@ export function canEditOpp(user: SessionUserInfo, opp: {
 
 export const canReopen = (user: SessionUserInfo) => user.role === 'admin' || user.role === 'market_lead'
 
+/** Delete (soft): Admin; Market Lead of the market; Sales who own or created the opp. */
+export function canDeleteOpp(user: SessionUserInfo, opp: { marketCode: string, salesOwnerId: number, createdBy: number | null }) {
+  if (user.role === 'admin') return true
+  if (!canSeeMarket(user, opp.marketCode)) return false
+  if (user.role === 'market_lead') return true
+  if (user.role === 'sales') return opp.salesOwnerId === user.id || opp.createdBy === user.id
+  return false
+}
+
 declare module 'h3' {
   interface H3EventContext {
     currentUser?: SessionUserInfo | null

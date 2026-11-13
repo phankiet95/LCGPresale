@@ -59,7 +59,7 @@ export default defineEventHandler(async (event): Promise<WeeklyReportResponse> =
   const pStart = pipe(startItems)
 
   // 2. Highlight — the window is "this week + next" relative to the report week
-  const highlights = await computeHighlights(db, open, isCurrent ? today : start, settings)
+  const hl = computeHighlights(open, isCurrent ? today : start)
 
   // 3. Market health
   const visible = MARKET_CODES.filter(m => user.markets === null || user.markets.includes(m))
@@ -131,7 +131,8 @@ export default defineEventHandler(async (event): Promise<WeeklyReportResponse> =
       slipped: changes.slipped.size,
       pipelineDeltaUsd: pEnd !== null && pStart !== null ? Math.round((pEnd - pStart) * 100) / 100 : null,
     },
-    highlights,
+    highlights: hl.items,
+    highlightPeriod: hl.period,
     marketHealth,
     warningList: warningList(open),
     topMgmt,

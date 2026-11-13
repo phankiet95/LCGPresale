@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { highlightTags, reportPeriod } from '#shared/highlight'
 import type { OppItem, OppListResponse } from '#shared/types'
 import { WARNING_META, type WarningCode } from '#shared/rules'
 import { HEALTH_BUCKET, STAGE_SHORT, WARNING_LABEL } from '#shared/constants'
-import { BriefcaseBusiness, Download, Info, Plus, SearchX, SquarePen } from 'lucide-vue-next'
+import { BriefcaseBusiness, Download, Info, Pencil, Plus, SearchX, SquarePen, Trash2 } from 'lucide-vue-next'
 
 useHead({ title: 'Pipeline · LCG Opportunity' })
 const { $api } = useNuxtApp()
@@ -20,20 +21,12 @@ const hasHigh = (o: OppItem) => o.warnings.some(c => WARNING_META[c].severity ==
 const tabs: { id: TabId, label: string, f: (o: OppItem) => boolean }[] = [
   { id: 'all', label: 'Open', f: o => o.status !== 'Closed' },
   { id: 'mine', label: 'My opps', f: o => isMine(o) && o.status !== 'Closed' },
-  { id: 'highlight', label: 'Highlight', f: o => o.status !== 'Closed' && (o.isFocusPinned || dueInWindow(o)) },
+  { id: 'highlight', label: 'Highlight', f: o => !!data.value && highlightTags(o, reportPeriod(data.value.today)).length > 0 },
   { id: 'warn', label: 'High warnings', f: hasHigh },
   { id: 'key', label: 'Key deals', f: o => o.isKeyDeal },
   { id: 'hold', label: 'On hold', f: o => o.status === 'On Hold' },
   { id: 'closed', label: 'Won / Lost', f: o => o.status === 'Closed' },
 ]
-function dueInWindow(o: OppItem) {
-  if (!o.dueDate || !data.value) return false
-  const t = new Date(`${data.value.today}T00:00:00Z`)
-  const dow = t.getUTCDay() || 7
-  const mon = new Date(t.getTime() - (dow - 1) * 864e5).toISOString().slice(0, 10)
-  const sun2 = new Date(t.getTime() + (14 - dow) * 864e5).toISOString().slice(0, 10)
-  return o.dueDate >= mon && o.dueDate <= sun2
-}
 const tab = computed<TabId>(() => (tabs.some(t => t.id === route.query.tab) ? route.query.tab as TabId : 'all'))
 const warning = computed(() => (typeof route.query.warning === 'string' ? route.query.warning as WarningCode : null))
 const setTab = (id: TabId) => router.replace({ query: { ...route.query, tab: id === 'all' ? undefined : id, warning: undefined } })
@@ -64,6 +57,8 @@ const pipelineUsd = computed(() => rows.value.filter(o => o.status !== 'Closed')
 // Quick Update: button per row, or select a row and press "U" (SRS S4)
 const selected = ref<number | null>(null)
 const updating = ref<OppItem | null>(null)
+const editing = ref<OppItem | null>(null)
+const deleting = ref<OppItem | null>(null)
 function onKey(e: KeyboardEvent) {
   if (updating.value || (e.target as HTMLElement)?.closest('input, textarea, select')) return
   if (e.key.toLowerCase() === 'u' && selected.value) {
@@ -179,7 +174,11 @@ function exportCsv() {
           <td><HealthBadge :health="o.health" /></td>
           <td><WarningBadges :codes="o.warnings" /></td>
           <td>
-            <button v-if="o.canEdit" type="button" class="btn btn-outline-primary" @click.stop="updating = o"><SquarePen class="ico" aria-hidden="true" />Update</button>
+            <span class="row-actions">
+              <button v-if="o.canEdit" type="button" class="btn btn-outline-primary" @click.stop="updating = o"><SquarePen class="ico" aria-hidden="true" />Update</button>
+              <button v-if="o.canEdit" type="button" class="icon-btn" title="Edit details" aria-label="Edit details" @click.stop="editing = o"><Pencil class="ico" aria-hidden="true" /></button>
+              <button v-if="o.canDelete" type="button" class="icon-btn danger" title="Delete" aria-label="Delete" @click.stop="deleting = o"><Trash2 class="ico" aria-hidden="true" /></button>
+            </span>
           </td>
         </tr>
         <tr v-if="!rows.length"><td colspan="13"><div class="empty"><SearchX class="ico" aria-hidden="true" />No opportunities match these filters.</div></td></tr>
@@ -191,6 +190,8 @@ function exportCsv() {
     Calculated on {{ data?.today }} (JST).
   </p>
 
+  <OppEditModal v-if="editing" :opp="editing" :can-change-market="me?.role === 'admin'" @close="editing = null" @saved="editing = null; refresh()" />
+  <DeleteOppDialog v-if="deleting" :opp="deleting" @close="deleting = null" @deleted="deleting = null; refresh()" />
   <QuickUpdateDrawer v-if="updating && data" :opp="updating" :today="data.today" @close="updating = null" @saved="onSaved" />
 </template>
 
@@ -198,5 +199,10 @@ function exportCsv() {
 .clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .sr-only { position: absolute; left: -9999px; }
 tbody tr { cursor: default; }
+.row-actions { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.icon-btn { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer; transition: background-color var(--dur), color var(--dur), border-color var(--dur); }
+.icon-btn .ico { width: 17px; height: 17px; }
+.icon-btn:hover { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+.icon-btn.danger:hover { background: var(--danger-soft); border-color: var(--danger-border); color: var(--danger); }
 kbd { border: 1px solid var(--border-strong); border-radius: 4px; padding: 0 4px; font-size: 11px; background: var(--surface); }
 </style>

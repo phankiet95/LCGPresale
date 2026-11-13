@@ -87,6 +87,7 @@ export function toItem(r: Row, s: R.Settings, today: string, user: SessionUserIn
     isKeyDeal: R.isOpen(ro) && (amountUsd > s.keyDealUsd || winRate >= s.keyDealWinRate),
     isTopMgmt: R.isOpen(ro) && amountUsd > s.topMgmtUsd,
     canEdit: canEditOpp(user, o),
+    canDelete: canDeleteOpp(user, o),
   }
 }
 
@@ -109,8 +110,11 @@ export async function loadOpps(event: Parameters<typeof useDb>[0] | Db, user: Se
   if (f.owner?.length) conds.push(inArray(so.account, f.owner))
   if (f.stage?.length) conds.push(inArray(o.stage, f.stage))
   if (f.dealType?.length) conds.push(inArray(o.dealType, f.dealType))
-  if (f.closeFrom) conds.push(gte(o.expectedCloseDate, f.closeFrom))
-  if (f.closeTo) conds.push(lte(o.expectedCloseDate, f.closeTo))
+  // Date range (SRS 5.10 "kỳ" filter): on expected close (default), created date or latest update date.
+  // created_at is a UTC timestamp, compared on its date part.
+  const dateCol = f.dateBy === 'created' ? sql`substr(${o.createdAt}, 1, 10)` : f.dateBy === 'update' ? o.latestUpdateDate : o.expectedCloseDate
+  if (f.dateFrom) conds.push(sql`${dateCol} >= ${f.dateFrom}`)
+  if (f.dateTo) conds.push(sql`${dateCol} <= ${f.dateTo}`)
   if (f.q) {
     const p = `%${f.q}%`
     conds.push(or(like(o.oppCode, p), like(o.name, p), like(tables.customers.name, p), like(tables.customers.nameJa, p)))

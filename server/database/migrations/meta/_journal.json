@@ -15,6 +15,13 @@
       "when": 1794463918622,
       "tag": "0001_master_data",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794536655930,
+      "tag": "0002_partners_intramart_workato",
+      "breakpoints": true
     }
   ]
 }
