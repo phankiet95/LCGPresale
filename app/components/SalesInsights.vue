@@ -108,13 +108,13 @@ const tiers = computed(() => [
     </ChartCard>
 
     <!-- 5. Platforms -->
-    <ChartCard title="Stage A + B by platform" :icon="ChartColumnBig" sub="Verbal award + Negotiation">
+    <ChartCard class="half" title="Stage A + B by platform" :icon="ChartColumnBig" sub="Verbal award + Negotiation">
       <template #default="{ big }">
         <ColumnChart v-if="ins.platforms.late.length" :items="partnerCols(ins.platforms.late, { stage: 'A,B' })" :height="big ? 380 : 140" color="var(--st-A)" :compact="!big" />
         <div v-else class="empty">No open opp in stage A or B.</div>
       </template>
     </ChartCard>
-    <ChartCard title="Stage C + D + O by platform" :icon="Sprout" sub="Open pipeline">
+    <ChartCard class="half" title="Stage C + D + O by platform" :icon="Sprout" sub="Open pipeline">
       <template #default="{ big }">
         <ColumnChart v-if="ins.platforms.early.length" :items="partnerCols(ins.platforms.early, { stage: 'C,D,O' })" :height="big ? 380 : 140" color="var(--st-C)" :compact="!big" />
         <div v-else class="empty">No open opp in stage C, D or O.</div>
@@ -140,7 +140,10 @@ const tiers = computed(() => [
 </template>
 
 <style scoped>
-.ins { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
+/* Always 4 charts per line on desktop (collapsing the menu only widens them); 2 on tablets, 1 on phones */
+.ins { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.ins > :deep(.half) { grid-column: span 2; }
+@media (max-width: 1180px) { .ins { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .ins > :deep(.wide) { grid-column: 1 / -1; }
 .ins > * { animation: fade-up 360ms var(--ease-out) backwards; }
 .ins > *:nth-child(2) { animation-delay: 40ms; }
@@ -176,5 +179,5 @@ const tiers = computed(() => [
 .tier-list a:hover { color: var(--primary); }
 .tier-list .small { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
 .yr { height: 30px; width: auto; font-size: 12.5px; padding: 0 8px; }
-@media (max-width: 720px) { .ins { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .ins { grid-template-columns: 1fr; } .ins > :deep(.half) { grid-column: auto; } }
 </style>
