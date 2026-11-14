@@ -133,7 +133,9 @@ Excel owners imported by the seed start **inactive with no password**. Admin →
 - **Filters**: Partner, Owner, Stage, Deal type and Health are multi-select (`MultiSelect.vue`).
 - **Overview**: a summary strip above the Pipeline table that follows the tab and filters. The detail page has Stage and Team cards.
   `v-tip` shows the full text of any truncated cell on hover.
-- **Still open**: "Bidding lead" and what "VI owner" should hold. To confirm with the sales team.
+- **VI owner** (2026-11-14): free text with suggestions from VI names already used (column `vi_owner`, migration 0003; old `vi_owner_id` kept but no longer edited).
+- **Bidding lead** (2026-11-14): free text with suggestions (column `bidding_lead`, migration 0004); shown on the dashboard Top 10 with Sales and VI.
+- **Side menu** collapses to icons (button next to the logo, or Ctrl+B); remembered per browser.
 
 ### Decisions worth knowing
 - **SPA (`ssr: false`)**: this is an internal tool behind a login, and SPA mode avoids SSR-internal fetches losing the D1 binding.

@@ -14,7 +14,7 @@ import type { LogItem, LogKind, LogResponse } from '#shared/types'
 const FIELD_LABEL: Record<string, string> = {
   name: 'Name', industry: 'Industry', marketCode: 'Market', countryId: 'Country', partnerId: 'Partner',
   secondaryPartner: 'Secondary partner', solution: 'Solution', isLaida: 'LAIDA', dealType: 'Deal type',
-  salesOwnerId: 'Sales owner', viOwnerId: 'VI owner', coordinatorId: 'Coordinator', amount: 'Amount', currency: 'Currency',
+  salesOwnerId: 'Sales owner', viOwnerId: 'VI owner', viOwner: 'VI owner', biddingLead: 'Bidding lead', coordinatorId: 'Coordinator', amount: 'Amount', currency: 'Currency',
   winRateOverride: 'Win rate override', winRateReason: 'Win-rate reason', priority: 'Priority',
   expectedCloseDate: 'Expected close', nextAction: 'Next action', actionOwnerId: 'Action owner', dueDate: 'Due date',
   blockingIssue: 'Blocking issue', supportNeeded: 'Support needed', backgroundNote: 'Background note',

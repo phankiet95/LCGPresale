@@ -127,7 +127,7 @@ export default defineEventHandler(async (event): Promise<ImportResponse> => {
           ['dealType', 'Deal type', 'dealType'], ['industry', 'Industry', 'industry'], ['priority', 'Priority', 'priority'],
           ['winRateReason', 'Win-rate reason', 'winRateReason'], ['nextAction', 'Next action', 'nextAction'],
           ['blockingIssue', 'Blocking issue', 'blockingIssue'], ['supportNeeded', 'Support needed', 'supportNeeded'],
-          ['backgroundNote', 'Background note', 'backgroundNote'],
+          ['backgroundNote', 'Background note', 'backgroundNote'], ['viOwner', 'VI owner', 'viOwner'], ['biddingLead', 'Bidding lead', 'biddingLead'],
         ]
         for (const [k, label, f] of texts) {
           const v = s(k)
@@ -136,13 +136,10 @@ export default defineEventHandler(async (event): Promise<ImportResponse> => {
         const so = person('salesOwner', 'Sales owner')
         if (!so.acc) r.errors.push('Sales owner is required')
         else diff('Sales owner', item.salesOwner?.toLowerCase(), so.acc.toLowerCase(), () => (edit.salesOwnerAccount = so.acc))
-        const vi = person('viOwner', 'VI owner')
         const co = person('coordinator', 'Coordinator')
         const ao = person('actionOwner', 'Action owner')
-        let viChanged = false
         let coChanged = false
         let aoChanged = false
-        diff('VI owner', item.viOwner?.toLowerCase(), vi.acc?.toLowerCase(), () => (viChanged = true))
         diff('Coordinator', item.coordinator?.toLowerCase(), co.acc?.toLowerCase(), () => (coChanged = true))
         diff('Action owner', item.actionOwner?.toLowerCase(), ao.acc?.toLowerCase(), () => (aoChanged = true))
 
@@ -174,7 +171,6 @@ export default defineEventHandler(async (event): Promise<ImportResponse> => {
         r.action = r.errors.length ? 'error' : r.changes.length ? 'update' : 'skip'
         if (!apply || r.action !== 'update') continue
 
-        if (viChanged) edit.viOwnerId = await resolve(vi.acc)
         if (coChanged) edit.coordinatorId = await resolve(co.acc)
         if (aoChanged) edit.actionOwnerId = await resolve(ao.acc)
         const loaded = await loadOppByCode(event, user, item.oppCode)
@@ -204,7 +200,6 @@ export default defineEventHandler(async (event): Promise<ImportResponse> => {
         const pid = partner ? partnerId.get(partner.toLowerCase()) : undefined
         if (!pid) r.errors.push(partner ? `Unknown partner "${partner}"` : 'Partner is required')
         const so = person('salesOwner', 'Sales owner')
-        const vi = person('viOwner', 'VI owner')
         const co = person('coordinator', 'Coordinator')
         const ao = person('actionOwner', 'Action owner')
         const stage = (s('stage')?.toUpperCase() ?? 'O')
@@ -217,7 +212,7 @@ export default defineEventHandler(async (event): Promise<ImportResponse> => {
           salesOwnerAccount: so.acc ?? user.account, amount, currency: s('currency')?.toUpperCase() ?? 'USD', stage,
           winRateOverride: wr, winRateReason: s('winRateReason'), priority: s('priority'),
           expectedCloseDate: s('expectedCloseDate') ?? '', nextAction: s('nextAction'), dueDate: s('dueDate'),
-          blockingIssue: s('blockingIssue'), supportNeeded: s('supportNeeded'), backgroundNote: s('backgroundNote'),
+          blockingIssue: s('blockingIssue'), supportNeeded: s('supportNeeded'), backgroundNote: s('backgroundNote'), viOwner: s('viOwner'), biddingLead: s('biddingLead'),
           confirmDuplicate: true,
         }
         const check = CreateFields.safeParse(input)
@@ -238,7 +233,7 @@ export default defineEventHandler(async (event): Promise<ImportResponse> => {
 
         const created = await createOpp(db, user, settings, today, {
           ...check.data,
-          viOwnerId: await resolve(vi.acc), coordinatorId: await resolve(co.acc), actionOwnerId: await resolve(ao.acc),
+          coordinatorId: await resolve(co.acc), actionOwnerId: await resolve(ao.acc),
         })
         r.oppCode = created.oppCode
         if (activity) {

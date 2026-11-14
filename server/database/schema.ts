@@ -127,7 +127,9 @@ export const opportunities = sqliteTable('opportunities', {
   isLaida: integer('is_laida', { mode: 'boolean' }).notNull().default(false),
   dealType: text('deal_type'), // Project | License | Project+License | AMS
   salesOwnerId: integer('sales_owner_id').notNull().references(() => users.id),
-  viOwnerId: integer('vi_owner_id').references(() => users.id),
+  viOwnerId: integer('vi_owner_id').references(() => users.id), // legacy, no longer edited
+  viOwner: text('vi_owner'), // VI name, free text
+  biddingLead: text('bidding_lead'), // free text
   coordinatorId: integer('coordinator_id').references(() => users.id),
   amount: real('amount').notNull().default(0),
   currency: text('currency').notNull().default('USD'),

@@ -8,7 +8,6 @@ import { HEALTH_BUCKET } from '#shared/constants'
 export const todayJst = () => R.todayJst()
 
 const so = alias(tables.users, 'so')
-const vo = alias(tables.users, 'vo')
 const co = alias(tables.users, 'co')
 const ao = alias(tables.users, 'ao')
 const cb = alias(tables.users, 'cb')
@@ -21,7 +20,6 @@ function baseQuery(db: Db) {
     partner: tables.partners.name,
     country: tables.countries.name,
     salesOwner: so.account,
-    viOwner: vo.account,
     coordinator: co.account,
     actionOwner: ao.account,
     createdBy: cb.account,
@@ -31,7 +29,6 @@ function baseQuery(db: Db) {
     .innerJoin(tables.partners, eq(tables.partners.id, o.partnerId))
     .leftJoin(tables.countries, eq(tables.countries.id, o.countryId))
     .innerJoin(so, eq(so.id, o.salesOwnerId))
-    .leftJoin(vo, eq(vo.id, o.viOwnerId))
     .leftJoin(co, eq(co.id, o.coordinatorId))
     .leftJoin(ao, eq(ao.id, o.actionOwnerId))
     .leftJoin(cb, eq(cb.id, o.createdBy))
@@ -66,7 +63,7 @@ export function toItem(r: Row, s: R.Settings, today: string, user: SessionUserIn
     industry: o.industry, marketCode: o.marketCode, countryId: o.countryId, country: r.country,
     partnerId: o.partnerId, partner: r.partner, secondaryPartner: o.secondaryPartner, solution: o.solution,
     isLaida: o.isLaida, dealType: o.dealType, salesOwnerId: o.salesOwnerId, salesOwner: r.salesOwner,
-    viOwnerId: o.viOwnerId, viOwner: r.viOwner, coordinatorId: o.coordinatorId, coordinator: r.coordinator,
+    viOwnerId: o.viOwnerId, viOwner: o.viOwner, biddingLead: o.biddingLead, coordinatorId: o.coordinatorId, coordinator: r.coordinator,
     amount: o.amount, currency: o.currency, winRateOverride: o.winRateOverride, winRateReason: o.winRateReason,
     priority: o.priority, status: o.status, stage: o.stage, stageChangedAt: o.stageChangedAt,
     statusChangedAt: o.statusChangedAt, latestActivity: o.latestActivity, latestUpdateDate: o.latestUpdateDate,

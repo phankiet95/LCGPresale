@@ -162,10 +162,9 @@ const HEALTH_COLOR = { Green: 'var(--green)', Amber: 'var(--amber)', Red: 'var(-
 
   <p v-if="error" class="error-text">{{ errMsg(error) }}</p>
   <div class="table-wrap">
-    <table class="data" style="min-width: 1180px">
+    <table class="data" style="min-width: 1100px">
       <thead>
         <tr>
-          <SortTh :sort="sort" k="oppCode">Code</SortTh>
           <SortTh :sort="sort" k="name">Opportunity · Customer</SortTh>
           <SortTh :sort="sort" k="marketCode">Mkt</SortTh>
           <SortTh :sort="sort" k="partner">Partner</SortTh>
@@ -186,7 +185,6 @@ const HEALTH_COLOR = { Green: 'var(--green)', Amber: 'var(--amber)', Red: 'var(-
           :class="{ 'row-red': isRed(o), selected: selected === o.id }"
           @click="selected = o.id"
         >
-          <td class="muted" style="white-space: nowrap">{{ o.oppCode }}</td>
           <td style="max-width: 300px">
             <NuxtLink v-tip :to="`/opportunities/${o.oppCode}`" class="clamp-2" style="font-weight: 600; text-decoration: none; color: var(--text)">{{ o.name }}</NuxtLink>
             <div v-tip class="muted truncate">{{ o.customer }}</div>
@@ -209,12 +207,12 @@ const HEALTH_COLOR = { Green: 'var(--green)', Amber: 'var(--amber)', Red: 'var(-
           <td><WarningBadges :codes="o.warnings" /></td>
           <td>
             <span class="row-actions">
-              <button v-if="o.canEdit" type="button" class="btn btn-outline-primary" @click.stop="updating = o"><SquarePen class="ico" aria-hidden="true" />Update</button>
+              <button v-if="o.canEdit" v-tip="'Update'" type="button" class="icon-btn primary" aria-label="Update" @click.stop="updating = o"><SquarePen class="ico" aria-hidden="true" /></button>
               <button v-if="o.canDelete" type="button" class="icon-btn danger" title="Delete" aria-label="Delete" @click.stop="deleting = o"><Trash2 class="ico" aria-hidden="true" /></button>
             </span>
           </td>
         </tr>
-        <tr v-if="!rows.length"><td colspan="13"><div class="empty"><SearchX class="ico" aria-hidden="true" />No opportunities match these filters.</div></td></tr>
+        <tr v-if="!rows.length"><td colspan="12"><div class="empty"><SearchX class="ico" aria-hidden="true" />No opportunities match these filters.</div></td></tr>
       </tbody>
     </table>
   </div>
@@ -236,6 +234,8 @@ tbody tr { cursor: default; }
 .icon-btn { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer; transition: background-color var(--dur), color var(--dur), border-color var(--dur); }
 .icon-btn .ico { width: 17px; height: 17px; }
 .icon-btn:hover { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+.icon-btn.primary { color: var(--primary); }
+.icon-btn.primary:hover { background: var(--primary-soft); border-color: var(--primary-tint); color: var(--primary); }
 .icon-btn.danger:hover { background: var(--danger-soft); border-color: var(--danger-border); color: var(--danger); }
 .ov { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0; padding: 0; overflow: hidden; }
 .ov-cell { display: flex; flex-direction: column; gap: 3px; padding: 14px 16px; border-right: 1px solid var(--row-border); min-width: 0; }

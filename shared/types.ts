@@ -32,6 +32,7 @@ export interface OppItem {
   salesOwner: string
   viOwnerId: number | null
   viOwner: string | null
+  biddingLead: string | null
   coordinatorId: number | null
   coordinator: string | null
   amount: number
@@ -143,6 +144,10 @@ export interface MetaResponse {
   lookups: Record<string, string[]>
   defaultWinRate: Record<Stage, number>
   currencies: string[]
+  /** distinct VI names already used on opportunities (suggestions for the VI owner field) */
+  viOwners: string[]
+  /** distinct Bidding lead names already used */
+  biddingLeads: string[]
 }
 
 export interface DashboardResponse {

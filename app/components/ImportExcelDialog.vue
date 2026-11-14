@@ -34,6 +34,7 @@ async function applyImport() {
   error.value = ''
   try {
     result.value = await $api<ImportResponse>('/api/opportunities/import', { method: 'POST', body: { apply: true, rows: rows.value } })
+    refreshNuxtData('meta') // imported VI names -> suggestions
     emit('done')
   }
   catch (err) { error.value = errMsg(err) }

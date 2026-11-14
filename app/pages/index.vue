@@ -129,29 +129,31 @@ const isRed = (o: OppItem) => HEALTH_BUCKET(o.health) === 'Red' || o.warnings.in
         <NuxtLink :to="pipelineLink()" class="small more">See all in Pipeline<ArrowRight class="ico" aria-hidden="true" /></NuxtLink>
       </div>
       <div style="overflow-x: auto">
-        <table class="data" style="min-width: 860px">
+        <table class="data" style="min-width: 980px">
           <thead>
             <tr>
-              <SortTh :sort="topSort" k="oppCode">Code</SortTh><SortTh :sort="topSort" k="customer">Customer · Opportunity</SortTh>
+              <SortTh :sort="topSort" k="customer">Customer · Opportunity</SortTh>
               <SortTh :sort="topSort" k="marketCode">Market</SortTh><SortTh :sort="topSort" k="partner">Partner</SortTh>
               <SortTh :sort="topSort" k="stage">Stage</SortTh><SortTh :sort="topSort" k="amountUsd" num>Amount</SortTh>
-              <SortTh :sort="topSort" k="winRate" num>Win</SortTh><SortTh :sort="topSort" k="salesOwner">Owner</SortTh>
+              <SortTh :sort="topSort" k="winRate" num>Win</SortTh><SortTh :sort="topSort" k="biddingLead">Bidding lead</SortTh>
+              <SortTh :sort="topSort" k="salesOwner">Sales</SortTh><SortTh :sort="topSort" k="viOwner">VI</SortTh>
               <SortTh :sort="topSort" k="health">Health</SortTh>
             </tr>
           </thead>
           <tbody>
             <tr v-for="o in topSort.rows.value" :key="o.id" :class="{ 'row-red': isRed(o) }">
-              <td class="muted" style="white-space: nowrap">{{ o.oppCode }}</td>
               <td><NuxtLink :to="`/opportunities/${o.oppCode}`" class="opp-link"><div style="font-weight: 600">{{ o.customer }}</div><div class="muted">{{ o.name }}</div></NuxtLink></td>
               <td><span class="mkt-cell"><MarketFlag :code="o.marketCode" />{{ o.marketCode }}</span></td>
               <td>{{ o.partner }}</td>
               <td><span class="badge">{{ STAGE_SHORT[o.stage] }}</span></td>
               <td class="num" style="font-weight: 600" :title="amountTitle(o)">{{ fmtUsd(o.amountUsd) }}</td>
               <td class="num">{{ o.winRate }}%</td>
-              <td>{{ o.salesOwner }}</td>
+              <td><span v-tip class="ppl">{{ o.biddingLead ?? '—' }}</span></td>
+              <td><span v-tip class="ppl">{{ o.salesOwner }}</span></td>
+              <td><span v-tip class="ppl">{{ o.viOwner ?? '—' }}</span></td>
               <td><HealthBadge :health="o.health" /></td>
             </tr>
-            <tr v-if="!data.top10.length"><td colspan="9"><div class="empty"><SearchX class="ico" aria-hidden="true" />No open opportunities match the filter.</div></td></tr>
+            <tr v-if="!data.top10.length"><td colspan="10"><div class="empty"><SearchX class="ico" aria-hidden="true" />No open opportunities match the filter.</div></td></tr>
           </tbody>
         </table>
       </div>
@@ -161,6 +163,7 @@ const isRed = (o: OppItem) => HEALTH_BUCKET(o.health) === 'Red' || o.warnings.in
 </template>
 
 <style scoped>
+.ppl { display: block; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kpi { display: flex; flex-direction: column; gap: 6px; padding: 16px; text-decoration: none; color: var(--text); }
 .kpi:hover { border-color: var(--border-strong); }
 .kpi-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }

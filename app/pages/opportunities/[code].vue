@@ -2,7 +2,12 @@
 import type { OppDetailResponse } from '#shared/types'
 import { WARNING_META } from '#shared/rules'
 import { OPEN_STAGES, STAGE_SHORT, WARNING_LABEL } from '#shared/constants'
-import { BriefcaseBusiness, SquarePen, Trash2 } from 'lucide-vue-next'
+import {
+  AlarmClockOff, ArrowRight, BriefcaseBusiness, CalendarClock, CalendarX2, Check, CircleDollarSign, CirclePause, CircleX,
+  ClipboardX, FileText, HeartPulse, Hourglass, Layers, Lightbulb, ListPlus, MessageSquareOff, PenLine, Play, RotateCcw,
+  Scale, Search, SquarePen, Target, Trash2, TriangleAlert, Trophy, UsersRound,
+} from 'lucide-vue-next'
+import type { Component } from 'vue'
 import type { TransitionAction } from '~/components/TransitionDialog.vue'
 
 const route = useRoute()
@@ -28,7 +33,7 @@ const stepper = computed(() => {
   if (!o) return []
   const order = [...OPEN_STAGES, o.stage === 'L' ? 'L' : 'W'] as const
   const cur = order.indexOf(o.stage as never)
-  return order.map((s, i) => ({ s, label: STAGE_SHORT[s], state: i < cur ? 'past' : i === cur ? 'current' : 'future' }))
+  return order.map((s, i) => ({ s, label: STAGE_SHORT[s], icon: STAGE_ICON[s], state: i < cur ? 'past' : i === cur ? 'current' : 'future' }))
 })
 const daysToClose = computed(() => {
   if (!opp.value || !data.value) return null
@@ -42,6 +47,11 @@ const warningText: Record<string, (o: NonNullable<typeof opp.value>) => string> 
   W5: o => `next action was due ${o.dueDate}`,
   W6: () => 'amount is 0 at stage C/B/A',
   W7: o => `in stage ${o.stage} since ${o.stageChangedAt}`,
+}
+/** O lead · D discovery · C proposal · B negotiation · A verbal / signing · W won · L lost */
+const STAGE_ICON: Record<string, Component> = { O: Lightbulb, D: Search, C: FileText, B: Scale, A: PenLine, W: Trophy, L: CircleX }
+const WARNING_ICON: Record<string, Component> = {
+  W1: MessageSquareOff, W2: CirclePause, W3: CalendarX2, W4: ClipboardX, W5: AlarmClockOff, W6: CircleDollarSign, W7: Hourglass,
 }
 const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s === 'system' ? 'system' : '')
 </script>
@@ -67,45 +77,49 @@ const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s =
       </div>
       <div class="row">
         <template v-if="opp.status !== 'Closed' && perms.canEdit">
-          <button v-if="opp.status === 'On Hold'" type="button" class="btn" @click="dialog = 'resume'">Resume</button>
-          <button v-else type="button" class="btn" @click="dialog = 'hold'">On hold</button>
-          <button type="button" class="btn btn-danger" @click="dialog = 'lost'">Mark Lost</button>
-          <button type="button" class="btn btn-success" @click="dialog = 'won'">Mark Won</button>
+          <button v-if="opp.status === 'On Hold'" type="button" class="btn" @click="dialog = 'resume'"><Play class="ico" aria-hidden="true" />Resume</button>
+          <button v-else type="button" class="btn" @click="dialog = 'hold'"><CirclePause class="ico" aria-hidden="true" />On hold</button>
+          <button type="button" class="btn btn-danger" @click="dialog = 'lost'"><CircleX class="ico" aria-hidden="true" />Mark Lost</button>
+          <button type="button" class="btn btn-success" @click="dialog = 'won'"><Trophy class="ico" aria-hidden="true" />Mark Won</button>
         </template>
-        <button v-if="opp.status === 'Closed' && perms.canReopen" type="button" class="btn" @click="dialog = 'reopen'">Reopen</button>
+        <button v-if="opp.status === 'Closed' && perms.canReopen" type="button" class="btn" @click="dialog = 'reopen'"><RotateCcw class="ico" aria-hidden="true" />Reopen</button>
         <button v-if="perms.canDelete" type="button" class="btn btn-danger" title="Delete this opportunity" @click="dialog = 'delete'"><Trash2 class="ico" aria-hidden="true" />Delete</button>
         <button v-if="perms.canEdit" type="button" class="btn btn-primary" title="Log an activity and edit any field (shortcut: U)" @click="dialog = 'update'"><SquarePen class="ico" aria-hidden="true" />Update</button>
       </div>
     </header>
 
     <div aria-label="Stage" class="stepper">
-      <div v-for="st in stepper" :key="st.s" class="step" :class="[st.state, st.s === 'L' ? 'lost' : '']">{{ st.label }}</div>
+      <div v-for="st in stepper" :key="st.s" class="step" :class="[st.state, st.s === 'L' ? 'lost' : '']" :aria-current="st.state === 'current' ? 'step' : undefined">
+        <component :is="st.state === 'past' ? Check : st.icon" class="step-ico" aria-hidden="true" />{{ st.label }}
+      </div>
     </div>
 
-    <div v-if="opp.warnings.length" role="alert" class="alert alert-danger row" style="justify-content: space-between; gap: 12px">
-      <div class="stack" style="gap: 4px">
-        <b>{{ opp.warnings.length }} warning{{ opp.warnings.length > 1 ? 's' : '' }} to resolve</b>
-        <span>
-          <template v-for="(w, i) in opp.warnings" :key="w">
-            <span v-if="i"> &nbsp;·&nbsp; </span><b>{{ w }} · {{ WARNING_META[w].severity }}</b> — {{ WARNING_LABEL[w] }}: {{ warningText[w]?.(opp) }}
-          </template>
-        </span>
+    <div v-if="opp.warnings.length" role="alert" class="alert alert-danger warn-box">
+      <div class="stack" style="gap: 8px; min-width: 0">
+        <b class="warn-head"><TriangleAlert class="ico" aria-hidden="true" />{{ opp.warnings.length }} warning{{ opp.warnings.length > 1 ? 's' : '' }} to resolve</b>
+        <ul class="warn-list">
+          <li v-for="w in opp.warnings" :key="w">
+            <span class="warn-ico"><component :is="WARNING_ICON[w] ?? TriangleAlert" class="ico" aria-hidden="true" /></span>
+            <span><b>{{ w }} · {{ WARNING_META[w].severity }}</b> — {{ WARNING_LABEL[w] }}: {{ warningText[w]?.(opp) }}</span>
+          </li>
+        </ul>
       </div>
-      <button v-if="perms.canEdit" type="button" class="link-btn" @click="dialog = 'update'">Update now →</button>
+      <button v-if="perms.canEdit" type="button" class="btn btn-sm" @click="dialog = 'update'"><SquarePen class="ico" aria-hidden="true" />Update now</button>
     </div>
 
     <section class="grid-kpi" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr))">
-      <div class="card kpi"><span class="eyebrow">Amount</span><span class="kv" :title="amountTitle(opp)">{{ opp.amount ? fmtUsd(opp.amountUsd) : '—' }}</span><span class="small muted">USD · deal size {{ opp.dealSize }}</span></div>
-      <div class="card kpi"><span class="eyebrow">Win rate</span><span class="kv">{{ opp.winRate }}%</span><span class="small muted">{{ opp.winRateOverride !== null ? `Override · ${opp.winRateReason ?? 'no reason given'}` : `Stage ${opp.stage} default` }}{{ opp.importNeedsConfirm.includes('win_rate') ? ' · PIC to confirm' : '' }}</span></div>
-      <div class="card kpi"><span class="eyebrow">Weighted</span><span class="kv">{{ fmtUsd(opp.weightedUsd) }}</span><span class="small muted">Amount × win rate</span></div>
-      <div class="card kpi"><span class="eyebrow">Expected close</span><span class="kv" :style="{ color: opp.warnings.includes('W3') ? 'var(--danger)' : undefined }">{{ opp.expectedCloseDate }}</span><span class="small muted">{{ daysToClose === null ? '' : daysToClose >= 0 ? `in ${daysToClose} days` : `${-daysToClose} days overdue` }}</span></div>
-      <div class="card kpi"><span class="eyebrow">Stage</span><span class="kv">{{ STAGE_SHORT[opp.stage] }}</span><span class="small muted">{{ opp.status }}{{ opp.stageChangedAt ? ` · ${daysIn(opp.stageChangedAt)} days in stage` : '' }}</span></div>
-      <div class="card kpi team"><span class="eyebrow">Team</span>
+      <div class="card kpi"><span class="kpi-top"><span class="eyebrow">Amount</span><span class="ico-tile sm"><CircleDollarSign class="ico" aria-hidden="true" /></span></span><span class="kv" :title="amountTitle(opp)">{{ opp.amount ? fmtUsd(opp.amountUsd) : '—' }}</span><span class="small muted">USD · deal size {{ opp.dealSize }}</span></div>
+      <div class="card kpi"><span class="kpi-top"><span class="eyebrow">Win rate</span><span class="ico-tile sm"><Target class="ico" aria-hidden="true" /></span></span><span class="kv">{{ opp.winRate }}%</span><span class="small muted">{{ opp.winRateOverride !== null ? `Override · ${opp.winRateReason ?? 'no reason given'}` : `Stage ${opp.stage} default` }}{{ opp.importNeedsConfirm.includes('win_rate') ? ' · PIC to confirm' : '' }}</span></div>
+      <div class="card kpi"><span class="kpi-top"><span class="eyebrow">Weighted</span><span class="ico-tile sm"><Scale class="ico" aria-hidden="true" /></span></span><span class="kv">{{ fmtUsd(opp.weightedUsd) }}</span><span class="small muted">Amount × win rate</span></div>
+      <div class="card kpi"><span class="kpi-top"><span class="eyebrow">Expected close</span><span class="ico-tile sm" :class="{ danger: opp.warnings.includes('W3') }"><CalendarClock class="ico" aria-hidden="true" /></span></span><span class="kv" :style="{ color: opp.warnings.includes('W3') ? 'var(--danger)' : undefined }">{{ opp.expectedCloseDate }}</span><span class="small muted">{{ daysToClose === null ? '' : daysToClose >= 0 ? `in ${daysToClose} days` : `${-daysToClose} days overdue` }}</span></div>
+      <div class="card kpi"><span class="kpi-top"><span class="eyebrow">Stage</span><span class="ico-tile sm"><component :is="STAGE_ICON[opp.stage] ?? Layers" class="ico" aria-hidden="true" /></span></span><span class="kv">{{ STAGE_SHORT[opp.stage] }}</span><span class="small muted">{{ opp.status }}{{ opp.stageChangedAt ? ` · ${daysIn(opp.stageChangedAt)} days in stage` : '' }}</span></div>
+      <div class="card kpi team"><span class="kpi-top"><span class="eyebrow">Team</span><span class="ico-tile sm"><UsersRound class="ico" aria-hidden="true" /></span></span>
         <span class="small"><span class="muted">Sales</span> <b>{{ opp.salesOwner }}</b></span>
         <span class="small"><span class="muted">VI owner</span> <b>{{ opp.viOwner ?? '—' }}</b></span>
+        <span class="small"><span class="muted">Bidding lead</span> <b>{{ opp.biddingLead ?? '—' }}</b></span>
         <span class="small"><span class="muted">Coordinator</span> <b>{{ opp.coordinator ?? '—' }}</b></span>
       </div>
-      <div class="card kpi"><span class="eyebrow">Health</span><span><HealthBadge :health="opp.health" /></span><span class="small muted">{{ opp.latestUpdateDate ? `last update ${opp.latestUpdateDate} · ${daysAgo(opp.daysSinceUpdate)}` : 'no activity yet' }}</span></div>
+      <div class="card kpi"><span class="kpi-top"><span class="eyebrow">Health</span><span class="ico-tile sm"><HeartPulse class="ico" aria-hidden="true" /></span></span><span><HealthBadge :health="opp.health" /></span><span class="small muted">{{ opp.latestUpdateDate ? `last update ${opp.latestUpdateDate} · ${daysAgo(opp.daysSinceUpdate)}` : 'no activity yet' }}</span></div>
     </section>
 
     <div role="tablist" class="tabs">
@@ -118,7 +132,7 @@ const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s =
       <div class="card stack" style="flex: 3 1 480px; min-width: 0">
         <div class="row" style="justify-content: space-between">
           <h2>Activity timeline</h2>
-          <button v-if="perms.canEdit" type="button" class="link-btn" @click="dialog = 'update'">+ Log activity</button>
+          <button v-if="perms.canEdit" type="button" class="link-btn ico-link" @click="dialog = 'update'"><ListPlus class="ico" aria-hidden="true" />Log activity</button>
         </div>
         <div class="next-box">
           <div class="stack" style="gap: 4px"><span class="small muted">Next action</span><span v-if="opp.nextAction">{{ opp.nextAction }}</span><span v-else class="missing-chip">Not filled</span></div>
@@ -148,7 +162,7 @@ const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s =
             <div class="stack" style="gap: 4px"><span class="small" style="font-weight: 600; color: var(--muted)">System</span><span>Opportunity created{{ opp.createdBy ? ` by ${opp.createdBy}` : '' }}</span></div>
           </li>
         </ol>
-        <button v-if="tab === 'overview' && data.activities.length > 8" type="button" class="link-btn" @click="tab = 'activity'">Show all {{ data.activities.length }} activities</button>
+        <button v-if="tab === 'overview' && data.activities.length > 8" type="button" class="link-btn ico-link" @click="tab = 'activity'">Show all {{ data.activities.length }} activities<ArrowRight class="ico" aria-hidden="true" /></button>
       </div>
 
       <div class="card" style="flex: 2 1 340px; min-width: 0; display: flex; flex-direction: column">
@@ -161,6 +175,7 @@ const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s =
         <div class="kv-row"><span>Priority</span><span><span v-if="opp.priority">{{ opp.priority }}</span><span v-else class="missing-chip">Not filled</span></span></div>
         <div class="kv-row"><span>Amount (original)</span><span>{{ fmtFull(opp.amount, opp.currency) }}</span></div>
         <div class="kv-row"><span>VI owner</span><span>{{ opp.viOwner ?? '—' }}</span></div>
+        <div class="kv-row"><span>Bidding lead</span><span>{{ opp.biddingLead ?? '—' }}</span></div>
         <div class="kv-row"><span>Coordinator</span><span>{{ opp.coordinator ?? '—' }}</span></div>
         <div class="kv-row"><span>LAIDA</span><span>{{ opp.isLaida ? 'Yes' : 'No' }}</span></div>
         <div v-if="opp.pendingReason" class="kv-row"><span>Pending reason</span><span>{{ opp.pendingReason }}</span></div>
@@ -199,11 +214,25 @@ const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s =
 
 <style scoped>
 .stepper { display: flex; gap: 2px; flex-wrap: wrap; }
-.step { flex: 1 1 0; min-width: 90px; padding: 8px 10px; font-size: 12px; font-weight: 600; text-align: center; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%); background: var(--chip); color: var(--muted); }
+.step { display: flex; align-items: center; justify-content: center; gap: 6px; flex: 1 1 0; min-width: 90px; padding: 8px 14px; font-size: 12px; font-weight: 600; text-align: center; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%); background: var(--chip); color: var(--muted); }
 .step.past { background: var(--primary-tint); color: var(--primary-hover); }
 .step.current { background: var(--primary); color: var(--on-primary); }
 .step.current.lost { background: var(--danger); }
+.step-ico { width: 15px; height: 15px; flex: none; }
 .kpi { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; }
+.kpi-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.ico-tile.sm { width: 32px; height: 32px; border-radius: 9px; }
+.ico-tile.sm .ico { width: 17px; height: 17px; }
+.ico-tile.danger { background: var(--danger-soft); color: var(--danger); }
+.warn-box { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.warn-head { display: inline-flex; align-items: center; gap: 8px; }
+.warn-head .ico { width: 18px; height: 18px; color: var(--danger); }
+.warn-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.warn-list li { display: flex; align-items: flex-start; gap: 8px; }
+.warn-ico { width: 24px; height: 24px; flex: none; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--danger-border); color: var(--danger); }
+.warn-ico .ico { width: 14px; height: 14px; }
+.ico-link { display: inline-flex; align-items: center; gap: 6px; }
+.ico-link .ico { width: 16px; height: 16px; }
 .kv { font-size: 22px; font-weight: 700; }
 .next-box { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; background: var(--surface-2); border-radius: 10px; padding: 14px; font-size: 14px; }
 .timeline { list-style: none; margin: 0; padding: 0; }

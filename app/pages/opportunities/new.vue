@@ -23,7 +23,8 @@ const form = reactive({
   isLaida: false,
   dealType: '',
   salesOwnerAccount: me.value?.account ?? '',
-  viOwnerId: null as number | null,
+  viOwner: '',
+  biddingLead: '',
   amount: 0,
   currency: 'USD',
   stage: 'O' as typeof OPEN_STAGES[number],
@@ -93,7 +94,8 @@ async function save(confirmDuplicate = false) {
         isLaida: form.isLaida,
         dealType: form.dealType,
         salesOwnerAccount: form.salesOwnerAccount.trim(),
-        viOwnerId: form.viOwnerId,
+        viOwner: form.viOwner.trim() || null,
+        biddingLead: form.biddingLead.trim() || null,
         amount: Number(form.amount) || 0,
         currency: form.currency,
         stage: form.stage,
@@ -108,6 +110,7 @@ async function save(confirmDuplicate = false) {
         confirmDuplicate,
       },
     })
+    if (form.viOwner.trim() || form.biddingLead.trim()) refreshNuxtData('meta') // new VI name -> suggestions
     await navigateTo(`/opportunities/${created.oppCode}`)
   }
   catch (e) {
@@ -213,7 +216,12 @@ async function save(confirmDuplicate = false) {
         <datalist id="new-acc-list"><option v-for="u in meta?.users ?? []" :key="u.id" :value="u.account" /></datalist>
       </label>
       <label class="field">VI owner
-        <select v-model="form.viOwnerId" class="select"><option :value="null">—</option><option v-for="u in people" :key="u.id" :value="u.id">{{ u.account }}</option></select>
+        <input v-model="form.viOwner" class="input" list="new-vi-list" autocomplete="off" maxlength="100" placeholder="Type a VI name or pick one" title="Type a new VI name, or pick one already used">
+        <datalist id="new-vi-list"><option v-for="v in meta?.viOwners ?? []" :key="v" :value="v" /></datalist>
+      </label>
+      <label class="field">Bidding lead
+        <input v-model="form.biddingLead" class="input" list="new-bl-list" autocomplete="off" maxlength="100" placeholder="Type a name or pick one" title="Type a new name, or pick one already used">
+        <datalist id="new-bl-list"><option v-for="v in meta?.biddingLeads ?? []" :key="v" :value="v" /></datalist>
       </label>
       <label class="field full">Next action<input v-model="form.nextAction" class="input" :class="{ missing: !form.nextAction }"></label>
       <label class="field">Action owner

@@ -123,6 +123,7 @@ export async function readOppsExcel(file: File): Promise<ImportRow[]> {
   const colKey = new Map<number, (typeof EXCEL_COLUMNS)[number]>()
   ws.getRow(1).eachCell((cell, col) => {
     const h = String(cell.text ?? '').replace(/\s*\*\s*$/, '').trim().toLowerCase()
+      .replace(/^vi owner \(account\)$/, 'vi owner') // older exports
     const c = byHeader.get(h)
     if (c) colKey.set(col, c)
   })

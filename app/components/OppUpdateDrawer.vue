@@ -26,7 +26,7 @@ watch(() => act.type, (t) => { act.isCustomerFacing = ['Customer Meeting', 'Demo
 const initial = {
   name: o.name, industry: o.industry ?? '', marketCode: o.marketCode, countryId: o.countryId,
   partnerId: o.partnerId, secondaryPartner: o.secondaryPartner ?? '', solution: o.solution ?? '', isLaida: o.isLaida,
-  dealType: o.dealType ?? '', salesOwnerAccount: o.salesOwner ?? '', viOwnerId: o.viOwnerId, coordinatorId: o.coordinatorId,
+  dealType: o.dealType ?? '', salesOwnerAccount: o.salesOwner ?? '', viOwner: o.viOwner ?? '', biddingLead: o.biddingLead ?? '', coordinatorId: o.coordinatorId,
   amount: o.amount, currency: o.currency, stage: o.stage, winRateOverride: o.winRateOverride as number | null | '',
   winRateReason: o.winRateReason ?? '', priority: o.priority ?? '', expectedCloseDate: o.expectedCloseDate,
   nextAction: o.nextAction ?? '', actionOwnerId: o.actionOwnerId, dueDate: o.dueDate ?? '',
@@ -66,6 +66,8 @@ function changedFields(includeNextStep: boolean) {
     out.winRateReason = form.winRateReason || null
   }
   if ('salesOwnerAccount' in out) out.salesOwnerAccount = String(form.salesOwnerAccount).trim()
+  if ('viOwner' in out) out.viOwner = String(form.viOwner ?? '').trim() || null
+  if ('biddingLead' in out) out.biddingLead = String(form.biddingLead ?? '').trim() || null
   if (!canChangeMarket.value) delete out.marketCode
   if (!canChangeOwner.value) delete out.salesOwnerAccount
   if (!canVerify.value) delete out.verified
@@ -89,6 +91,7 @@ async function save() {
   busy.value = true
   try {
     if (Object.keys(patch).length) await $api(`/api/opportunities/${o.oppCode}`, { method: 'PATCH', body: patch })
+    if ('viOwner' in patch || 'biddingLead' in patch) refreshNuxtData('meta') // new VI name -> suggestions
     if (hasActivity) {
       await $api(`/api/opportunities/${o.oppCode}/activities`, {
         method: 'POST',
@@ -209,7 +212,10 @@ async function save() {
           </label>
           <label class="field">Solution<input v-model="form.solution" class="input"></label>
           <label class="field">VI owner
-            <select v-model="form.viOwnerId" class="select"><option :value="null">—</option><option v-for="u in people" :key="u.id" :value="u.id">{{ u.account }}</option></select>
+            <input v-model="form.viOwner" class="input" list="vi-list" autocomplete="off" maxlength="100" placeholder="Type a VI name or pick one" title="Type a new VI name, or pick one already used">
+          </label>
+          <label class="field">Bidding lead
+            <input v-model="form.biddingLead" class="input" list="bl-list" autocomplete="off" maxlength="100" placeholder="Type a name or pick one" title="Type a new name, or pick one already used">
           </label>
           <label class="field">Coordinator
             <select v-model="form.coordinatorId" class="select"><option :value="null">—</option><option v-for="u in people" :key="u.id" :value="u.id">{{ u.account }}</option></select>
@@ -221,6 +227,8 @@ async function save() {
           <label v-if="canVerify" class="check"><input v-model="form.verified" type="checkbox"> Data verified this week</label>
         </div>
         <datalist id="acc-list"><option v-for="a in accounts" :key="a" :value="a" /></datalist>
+        <datalist id="vi-list"><option v-for="v in meta?.viOwners ?? []" :key="v" :value="v" /></datalist>
+        <datalist id="bl-list"><option v-for="v in meta?.biddingLeads ?? []" :key="v" :value="v" /></datalist>
       </template>
 
       <div class="alert alert-info small">
