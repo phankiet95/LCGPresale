@@ -1,0 +1,62 @@
+<!-- Shown by Nuxt (SPA) until the app has loaded; SplashScreen.vue then takes over on the same frame. -->
+<div class="lcg-boot" role="status" aria-label="Loading LCG Opportunity Management">
+  <div class="lcg-boot-glow"></div>
+  <div class="lcg-boot-center">
+    <svg class="lcg-boot-mark" width="132" height="132" viewBox="0 0 100 100" aria-hidden="true">
+      <defs>
+        <linearGradient id="lcgb-sw" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stop-color="#fff" stop-opacity="0" /><stop offset=".5" stop-color="#fff" stop-opacity=".85" /><stop offset="1" stop-color="#fff" stop-opacity="0" />
+        </linearGradient>
+        <mask id="lcgb-mk" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+          <g fill="#fff" transform="translate(24 38) rotate(-4) skewY(-36) scale(.64)">
+            <path d="M6 16 H18 V82 H82 V94 H6 Z" /><path d="M26 30 H58 V41 H37 V63 H58 V74 H26 Z" />
+            <rect x="44" y="48" width="9" height="9" /><rect x="62" y="30" width="11" height="11" /><rect x="62" y="52" width="11" height="22" />
+            <rect x="66" y="10" width="11" height="11" /><rect x="82" y="22" width="11" height="11" />
+          </g>
+        </mask>
+      </defs>
+      <g fill="#E8202A" transform="translate(24 38) rotate(-4) skewY(-36) scale(.64)">
+        <path class="bp b1" d="M6 16 H18 V82 H82 V94 H6 Z" />
+        <path class="bp b2" d="M26 30 H58 V41 H37 V63 H58 V74 H26 Z" />
+        <rect class="bp b3" x="44" y="48" width="9" height="9" />
+        <rect class="bp b4" x="62" y="30" width="11" height="11" />
+        <rect class="bp b5" x="62" y="52" width="11" height="22" />
+        <rect class="bp b6" x="66" y="10" width="11" height="11" />
+        <rect class="bp b7" x="82" y="22" width="11" height="11" />
+      </g>
+      <g mask="url(#lcgb-mk)"><rect class="bsw" x="-60" y="0" width="40" height="100" fill="url(#lcgb-sw)" /></g>
+    </svg>
+    <div class="lcg-boot-word"><span class="w1">LCG</span><span class="w2">Opportunity Management</span></div>
+    <div class="lcg-boot-bar"><span></span></div>
+  </div>
+</div>
+<style>
+  .lcg-boot { --bg: #F5F6F8; --text: #111827; --muted: #5B6472; --chip: #EEF1F5; --soft: #EAF0FD;
+    position: fixed; inset: 0; z-index: 199; display: flex; align-items: center; justify-content: center; background: var(--bg);
+    font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif; }
+  [data-theme="dark"] .lcg-boot { --bg: #0E1117; --text: #E7EAF0; --muted: #9AA3B2; --chip: #232934; --soft: #1A2540; }
+  .lcg-boot-glow { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(420px 320px at 50% 44%, rgba(232, 32, 42, .14), transparent 70%), radial-gradient(900px 600px at 50% 120%, var(--soft), transparent 70%); }
+  .lcg-boot-center { position: relative; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .lcg-boot-mark { display: block; overflow: visible; filter: drop-shadow(0 12px 28px rgba(232, 32, 42, .28)); }
+  .lcg-boot .bp { transform-box: fill-box; transform-origin: center; animation: lcgb-in 820ms cubic-bezier(.34, 1.5, .64, 1) backwards; }
+  .lcg-boot .b1 { --dx: -46px; --dy: 30px; --r: -14deg; }
+  .lcg-boot .b2 { --dx: -30px; --dy: -34px; --r: 12deg; animation-delay: 110ms; }
+  .lcg-boot .b3 { --dx: 0px; --dy: 0px; --r: 90deg; animation-delay: 260ms; }
+  .lcg-boot .b4 { --dx: 40px; --dy: -10px; --r: -90deg; animation-delay: 330ms; }
+  .lcg-boot .b5 { --dx: 46px; --dy: 30px; --r: 45deg; animation-delay: 390ms; }
+  .lcg-boot .b6 { --dx: 10px; --dy: -50px; --r: 180deg; animation-delay: 450ms; }
+  .lcg-boot .b7 { --dx: 50px; --dy: -40px; --r: -180deg; animation-delay: 510ms; }
+  @keyframes lcgb-in { from { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--r)) scale(.2); } 60% { opacity: 1; } to { opacity: 1; transform: none; } }
+  .lcg-boot .bsw { animation: lcgb-sw 900ms cubic-bezier(.4, 0, .2, 1) 1050ms both; }
+  @keyframes lcgb-sw { from { transform: translateX(0); } to { transform: translateX(200px); } }
+  .lcg-boot-word { display: flex; flex-direction: column; align-items: center; gap: 2px; animation: lcgb-up 700ms cubic-bezier(.2, .8, .2, 1) 350ms both; }
+  .lcg-boot-word .w1 { font-size: 22px; font-weight: 700; letter-spacing: .32em; padding-left: .32em; color: var(--text); }
+  .lcg-boot-word .w2 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  @keyframes lcgb-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .lcg-boot-bar { width: 180px; height: 3px; border-radius: 3px; background: var(--chip); overflow: hidden; animation: lcgb-fade 500ms ease 600ms both; }
+  .lcg-boot-bar span { display: block; width: 40%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #E8202A, #1E4FC2); animation: lcgb-slide 1.1s cubic-bezier(.4, 0, .2, 1) infinite; }
+  @keyframes lcgb-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes lcgb-slide { from { transform: translateX(-110%); } to { transform: translateX(260%); } }
+  @media (prefers-reduced-motion: reduce) { .lcg-boot * { animation: none !important; } }
+</style>

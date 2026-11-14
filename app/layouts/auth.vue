@@ -24,7 +24,7 @@ const features = [
 
       <div class="bp-inner">
         <div class="bp-brand">
-          <div class="bp-logo">LCG</div>
+          <div class="bp-logo"><AppLogo :size="30" color="#fff" /></div>
           <div><div class="bp-b1">Opportunity Management</div><div class="bp-b2">LCG pre-sale pipeline</div></div>
         </div>
 
@@ -67,7 +67,7 @@ const features = [
 
       <div class="auth-card">
         <div class="brand-sm">
-          <div class="logo">LCG</div>
+          <div class="logo"><AppLogo :size="34" /></div>
           <div><div class="b1">Opportunity Management</div><div class="b2">LCG pre-sale pipeline</div></div>
         </div>
         <slot />
@@ -159,7 +159,7 @@ const features = [
 }
 @keyframes card-in { from { opacity: 0; transform: translateY(18px) scale(.985); } to { opacity: 1; transform: none; } }
 .brand-sm { display: none; gap: 12px; align-items: center; }
-.logo { width: 40px; height: 40px; border-radius: 10px; background: var(--primary); color: var(--on-primary); font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.logo { width: 44px; height: 44px; border-radius: 11px; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
 .b1 { font-weight: 700; font-size: 16px; }
 .b2 { font-size: 13px; color: var(--muted); }
 

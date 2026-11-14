@@ -43,6 +43,8 @@ export default defineEventHandler(async (event): Promise<DashboardResponse> => {
 
   // Highlight of the week (SRS 5.7): scheduled key activities / due dates / pinned in [Mon, next Sun]
   const hl = computeHighlights(open, today)
+  const fy = Number(getQuery(event).fy)
+  const forecastYear = Number.isInteger(fy) && fy > 2000 && fy < 2100 ? fy : Number(today.slice(0, 4))
 
   const top10: OppItem[] = [...open]
     .sort((a, b) => b.amountUsd - a.amountUsd || a.expectedCloseDate.localeCompare(b.expectedCloseDate))
@@ -68,5 +70,6 @@ export default defineEventHandler(async (event): Promise<DashboardResponse> => {
     top10,
     highlights: hl.items,
     highlightPeriod: hl.period,
+    insights: computeInsights(items, byMarket.filter(m => m.selected).map(m => m.code), forecastYear, today),
   }
 })

@@ -28,7 +28,7 @@ async function onSaved() {
   <div class="page-head">
     <div>
       <PageTitle :icon="ListTodo" title="My Actions" />
-      <div class="sub indent">Next actions where you are the action owner · {{ total }} in total. Completing one = log what happened with Quick Update.</div>
+      <div class="sub indent">Next actions where you are the action owner · {{ total }} in total. Completing one = log what happened with Update.</div>
     </div>
   </div>
   <p v-if="error" class="error-text">{{ errMsg(error) }}</p>
@@ -50,7 +50,7 @@ async function onSaved() {
     <div v-for="o in g.items" :key="o.id" class="act-row" :class="{ late: g.key === 'overdue' }">
       <div class="stack" style="gap: 3px; min-width: 0">
         <NuxtLink :to="`/opportunities/${o.oppCode}`" class="act-title">{{ o.nextAction ?? '(no next action)' }}</NuxtLink>
-        <span class="small muted act-meta">
+        <span v-tip class="small muted act-meta">
           <MarketFlag :code="o.marketCode" :size="16" />
           {{ o.oppCode }} · {{ o.name }} · {{ o.customer }}
         </span>
@@ -64,7 +64,7 @@ async function onSaved() {
       </button>
     </div>
   </section>
-  <QuickUpdateDrawer v-if="updating && data" :opp="updating" :today="data.today" @close="updating = null" @saved="onSaved" />
+  <OppUpdateDrawer v-if="updating && data" :opp="updating" :today="data.today" @close="updating = null" @saved="onSaved" />
 </template>
 
 <style scoped>

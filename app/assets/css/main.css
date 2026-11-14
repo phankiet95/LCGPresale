@@ -34,6 +34,8 @@
   --tip-bg: #111827; --tip-fg: #FFFFFF;
   --backdrop: rgba(17, 24, 39, .35);
   --icon-tile: #EAF0FD; --icon-tile-fg: #1E4FC2;
+  /* sales stages O→A: one blue ramp, light→dark (validated: ordinal, light surface) */
+  --st-O: #8EACF2; --st-D: #6890EA; --st-C: #4672DC; --st-B: #2556C4; --st-A: #173A8C;
   --radius: 8px;
   --radius-lg: 12px;
   --shadow-pop: 0 10px 30px rgba(17, 24, 39, .16);
@@ -57,6 +59,8 @@
   --overdue-hover: #33201D; --bar-dim: #3A4252; --bar-dim-rest: #2A303B; --skeleton-hi: #2B323E;
   --tip-bg: #E7EAF0; --tip-fg: #0E1117; --backdrop: rgba(0, 0, 0, .6);
   --icon-tile: #1E2A47; --icon-tile-fg: #93B4FA;
+  /* dark: the ramp runs dark→bright so A (closest to won) stays the most prominent (validated vs #161A22) */
+  --st-O: #2E52A0; --st-D: #3F68C4; --st-C: #5C86E3; --st-B: #86A8F2; --st-A: #BCD0FB;
   --shadow-pop: 0 10px 30px rgba(0, 0, 0, .55); --shadow-lift: 0 6px 18px rgba(0, 0, 0, .45);
   color-scheme: dark;
 }
@@ -274,3 +278,14 @@ table.data th:first-child { border-top-left-radius: 0; }
 .empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 8px; color: var(--muted); font-size: 13px; text-align: center; }
 .empty .ico { width: 26px; height: 26px; color: var(--faint); }
 .mkt-cell { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
+
+/* ---------- v-tip tooltip (full text of truncated cells) */
+.app-tip {
+  position: fixed; z-index: 100; pointer-events: none; opacity: 0; transform: translateY(2px);
+  padding: 8px 10px; border-radius: 8px; font-size: 12.5px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere;
+  background: var(--tip-bg); color: var(--tip-fg); box-shadow: var(--shadow-pop);
+  transition: opacity 120ms, transform 120ms var(--ease-out);
+}
+.app-tip.on { opacity: 1; transform: none; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

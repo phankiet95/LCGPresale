@@ -165,6 +165,7 @@ export interface DashboardResponse {
   top10: OppItem[]
   highlights: { opp: OppItem, tags: HighlightTag[] }[]
   highlightPeriod: ReportPeriod
+  insights: DashboardInsights
 }
 
 export interface AdminUser {
@@ -259,4 +260,49 @@ export interface MonthlyReportResponse {
     ytd: { won: number, lost: number, wonUsd: number, lostUsd: number, winRate: number | null }
     reasons: { reason: string, count: number, usd: number }[]
   }
+}
+
+// ---------------------------------------------------------------- Dashboard insights (sales feedback 2026-11-14)
+type OpenStage = 'O' | 'D' | 'C' | 'B' | 'A'
+export interface PartnerSum { name: string, count: number, amountUsd: number }
+export interface DealTier { minUsd: number, count: number, amountUsd: number, opps: OppItem[] }
+export interface DashboardInsights {
+  byStage: { stage: OpenStage, count: number, amountUsd: number, weightedUsd: number }[]
+  byPnl: { code: string, count: number, amountUsd: number, stages: Record<OpenStage, number> }[]
+  tiers: { mega: DealTier, large: DealTier }
+  resell: { byPartner: PartnerSum[], count: number, amountUsd: number }
+  /** late = stages A + B, early = stages C + D + O (open opps) */
+  platforms: { late: PartnerSum[], early: PartnerSum[] }
+  forecast: {
+    year: number
+    years: number[]
+    months: { month: string, count: number, amountUsd: number, weightedUsd: number, stages: Record<'O' | 'D' | 'C', number>, past: boolean }[]
+  }
+}
+
+// ---------------------------------------------------------------- Change log (all changes, scoped by role)
+export type LogKind = 'field' | 'stage' | 'activity' | 'created' | 'deleted' | 'user'
+export interface LogItem {
+  key: string
+  kind: LogKind
+  at: string
+  by: string | null
+  oppCode: string | null
+  oppName: string | null
+  market: string | null
+  deleted: boolean
+  /** field changes: readable field name */
+  field: string | null
+  from: string | null
+  to: string | null
+  /** activity content / reason / user account */
+  text: string | null
+}
+export interface LogResponse {
+  items: LogItem[]
+  total: number
+  scope: 'all' | 'markets' | 'mine'
+  from: string
+  to: string
+  people: string[]
 }

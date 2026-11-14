@@ -2,7 +2,7 @@
 import type { OppDetailResponse } from '#shared/types'
 import { WARNING_META } from '#shared/rules'
 import { OPEN_STAGES, STAGE_SHORT, WARNING_LABEL } from '#shared/constants'
-import { BriefcaseBusiness, Pencil, Trash2 } from 'lucide-vue-next'
+import { BriefcaseBusiness, SquarePen, Trash2 } from 'lucide-vue-next'
 import type { TransitionAction } from '~/components/TransitionDialog.vue'
 
 const route = useRoute()
@@ -15,7 +15,8 @@ useHead({ title: () => `${code.value} · LCG Opportunity` })
 const opp = computed(() => data.value?.opp)
 const perms = computed(() => data.value?.permissions)
 const tab = ref<'overview' | 'activity' | 'history'>('overview')
-const dialog = ref<null | 'update' | 'edit' | 'delete' | TransitionAction>(null)
+const daysIn = (iso: string) => (data.value ? Math.max(0, Math.round((Date.parse(`${data.value.today}T00:00:00Z`) - Date.parse(`${iso.slice(0, 10)}T00:00:00Z`)) / 864e5)) : 0)
+const dialog = ref<null | 'update' | 'details' | 'delete' | TransitionAction>(null)
 const onDeleted = () => navigateTo('/pipeline')
 async function done() {
   dialog.value = null
@@ -73,8 +74,7 @@ const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s =
         </template>
         <button v-if="opp.status === 'Closed' && perms.canReopen" type="button" class="btn" @click="dialog = 'reopen'">Reopen</button>
         <button v-if="perms.canDelete" type="button" class="btn btn-danger" title="Delete this opportunity" @click="dialog = 'delete'"><Trash2 class="ico" aria-hidden="true" />Delete</button>
-        <button v-if="perms.canEdit" type="button" class="btn" @click="dialog = 'edit'"><Pencil class="ico" aria-hidden="true" />Edit</button>
-        <button v-if="perms.canEdit" type="button" class="btn btn-primary" @click="dialog = 'update'">Quick Update</button>
+        <button v-if="perms.canEdit" type="button" class="btn btn-primary" title="Log an activity and edit any field (shortcut: U)" @click="dialog = 'update'"><SquarePen class="ico" aria-hidden="true" />Update</button>
       </div>
     </header>
 
@@ -99,6 +99,12 @@ const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s =
       <div class="card kpi"><span class="eyebrow">Win rate</span><span class="kv">{{ opp.winRate }}%</span><span class="small muted">{{ opp.winRateOverride !== null ? `Override · ${opp.winRateReason ?? 'no reason given'}` : `Stage ${opp.stage} default` }}{{ opp.importNeedsConfirm.includes('win_rate') ? ' · PIC to confirm' : '' }}</span></div>
       <div class="card kpi"><span class="eyebrow">Weighted</span><span class="kv">{{ fmtUsd(opp.weightedUsd) }}</span><span class="small muted">Amount × win rate</span></div>
       <div class="card kpi"><span class="eyebrow">Expected close</span><span class="kv" :style="{ color: opp.warnings.includes('W3') ? 'var(--danger)' : undefined }">{{ opp.expectedCloseDate }}</span><span class="small muted">{{ daysToClose === null ? '' : daysToClose >= 0 ? `in ${daysToClose} days` : `${-daysToClose} days overdue` }}</span></div>
+      <div class="card kpi"><span class="eyebrow">Stage</span><span class="kv">{{ STAGE_SHORT[opp.stage] }}</span><span class="small muted">{{ opp.status }}{{ opp.stageChangedAt ? ` · ${daysIn(opp.stageChangedAt)} days in stage` : '' }}</span></div>
+      <div class="card kpi team"><span class="eyebrow">Team</span>
+        <span class="small"><span class="muted">Sales</span> <b>{{ opp.salesOwner }}</b></span>
+        <span class="small"><span class="muted">VI owner</span> <b>{{ opp.viOwner ?? '—' }}</b></span>
+        <span class="small"><span class="muted">Coordinator</span> <b>{{ opp.coordinator ?? '—' }}</b></span>
+      </div>
       <div class="card kpi"><span class="eyebrow">Health</span><span><HealthBadge :health="opp.health" /></span><span class="small muted">{{ opp.latestUpdateDate ? `last update ${opp.latestUpdateDate} · ${daysAgo(opp.daysSinceUpdate)}` : 'no activity yet' }}</span></div>
     </section>
 
@@ -185,8 +191,7 @@ const sourceLabel = (s: string) => (s === 'import' ? 'imported from Excel' : s =
       </table>
     </section>
 
-    <QuickUpdateDrawer v-if="dialog === 'update'" :opp="opp" :today="data.today" @close="dialog = null" @saved="done" />
-    <OppEditModal v-else-if="dialog === 'edit'" :opp="opp" :can-change-market="perms.canChangeMarket" @close="dialog = null" @saved="done" />
+    <OppUpdateDrawer v-if="dialog === 'update' || dialog === 'details'" :opp="opp" :today="data.today" :tab="dialog === 'details' ? 'details' : 'activity'" @close="dialog = null" @saved="done" />
     <DeleteOppDialog v-else-if="dialog === 'delete'" :opp="opp" @close="dialog = null" @deleted="onDeleted" />
     <TransitionDialog v-else-if="dialog" :opp="opp" :action="dialog" :today="data.today" @close="dialog = null" @saved="done" />
   </template>

@@ -13,6 +13,9 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  // Animated LCG splash shown until the SPA has loaded (app/spa-loading-template.html); SplashScreen.vue takes over.
+  spaLoadingTemplate: 'spa-loading-template.html',
+
   app: {
     head: {
       title: 'LCG Opportunity Management',
@@ -24,6 +27,7 @@ export default defineNuxtConfig({
         innerHTML: `(function(){var t;try{t=localStorage.getItem('lcg.theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t})()`,
       }],
       link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap' },

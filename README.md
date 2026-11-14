@@ -117,6 +117,24 @@ Excel owners imported by the seed start **inactive with no password**. Admin →
 - **Market chips**: every market is always shown. Markets with no opp are grey, and markets outside the user's scope are greyed out and disabled.
 - **New partners**: Intra-mart and Workato, in migration `0002_partners_intramart_workato.sql`.
 
+### Sales-team feedback, round 2
+- **One "Update" editor** (`OppUpdateDrawer.vue`) replaces Quick Update and Edit. It has two tabs: "Activity & next step" (activity, next step, stage, win rate) and "All details".
+  One Save sends only the changed fields to `PATCH`, plus `POST /activities` when an activity was written.
+  Write logic lives in `server/utils/opp-ops.ts`, shared by the endpoints and the Excel import.
+  `PATCH` now also accepts `stage` for open opps.
+- **Sales owner** is typed as an FPT account (`salesOwnerAccount`), with suggestions. An unknown account becomes an inactive user, as in SRS 8.1.
+- **Excel round-trip**: Pipeline → **Export Excel** (the listed opps, a hidden list sheet for drop-downs, and a "How to import" sheet).
+  Then **Import Excel** shows a preview and applies it through `POST /api/opportunities/import`.
+  - Rows with a code update that opp, only the cells that changed.
+  - Rows without a code create a new opp, after a duplicate check.
+  - Read-only (grey) columns are ignored, and nothing is ever deleted.
+  - The column definitions are in `shared/excel-columns.ts`.
+  - exceljs is loaded only on demand.
+- **Filters**: Partner, Owner, Stage, Deal type and Health are multi-select (`MultiSelect.vue`).
+- **Overview**: a summary strip above the Pipeline table that follows the tab and filters. The detail page has Stage and Team cards.
+  `v-tip` shows the full text of any truncated cell on hover.
+- **Still open**: "Bidding lead" and what "VI owner" should hold. To confirm with the sales team.
+
 ### Decisions worth knowing
 - **SPA (`ssr: false`)**: this is an internal tool behind a login, and SPA mode avoids SSR-internal fetches losing the D1 binding.
 - The automatic "Stage C → B" Internal activity (SRS 5.8) is stored with `source = 'system'`. It does **not** refresh Latest Update Date, so changing a stage cannot turn an opp Green without a real follow-up.

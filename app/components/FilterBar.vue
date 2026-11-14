@@ -13,11 +13,11 @@ const totalOpen = computed(() => Object.values(props.marketCounts ?? {}).reduce(
 const owners = computed(() => meta.value?.users ?? [])
 const dealTypes = computed(() => meta.value?.lookups.deal_type ?? [])
 
-const single = (v: string[] | undefined) => v?.[0] ?? ''
-const onSelect = (key: 'partner' | 'owner' | 'dealType' | 'stage' | 'health', e: Event) => {
-  const v = (e.target as HTMLSelectElement).value
-  set({ [key]: v ? [v] : [] })
-}
+const partnerOpts = computed(() => (meta.value?.partners ?? []).map(p => ({ value: p.name })))
+const ownerOpts = computed(() => owners.value.map(u => ({ value: u.account, label: u.displayName && u.displayName !== u.account ? `${u.account} · ${u.displayName}` : u.account })))
+const stageOpts = ALL_STAGES.map(s => ({ value: s, label: STAGE_SHORT[s] }))
+const dealOpts = computed(() => dealTypes.value.map(d => ({ value: d })))
+const healthOpts = ['Green', 'Amber', 'Red', 'Closed'].map(h => ({ value: h }))
 const search = ref(filter.value.q ?? '')
 let t: ReturnType<typeof setTimeout> | undefined
 watch(search, (v) => {
@@ -56,26 +56,11 @@ function clearAll() {
       <Search class="ico" aria-hidden="true" />
       <input v-model="search" type="search" placeholder="Code, opp, customer" aria-label="Search">
     </label>
-    <select class="sel" aria-label="Partner" :value="single(filter.partner)" @change="onSelect('partner', $event)">
-      <option value="">Partner: All</option>
-      <option v-for="p in meta?.partners" :key="p.id" :value="p.name">{{ p.name }}</option>
-    </select>
-    <select class="sel" aria-label="Owner" :value="single(filter.owner)" @change="onSelect('owner', $event)">
-      <option value="">Owner: All</option>
-      <option v-for="u in owners" :key="u.id" :value="u.account">{{ u.account }}</option>
-    </select>
-    <select class="sel" aria-label="Stage" :value="single(filter.stage)" @change="onSelect('stage', $event)">
-      <option value="">Stage: All</option>
-      <option v-for="s in ALL_STAGES" :key="s" :value="s">{{ STAGE_SHORT[s] }}</option>
-    </select>
-    <select class="sel" aria-label="Deal type" :value="single(filter.dealType)" @change="onSelect('dealType', $event)">
-      <option value="">Deal type: All</option>
-      <option v-for="d in dealTypes" :key="d" :value="d">{{ d }}</option>
-    </select>
-    <select class="sel" aria-label="Health" :value="single(filter.health)" @change="onSelect('health', $event)">
-      <option value="">Health: All</option>
-      <option v-for="h in ['Green', 'Amber', 'Red', 'Closed']" :key="h" :value="h">{{ h }}</option>
-    </select>
+    <MultiSelect label="Partner" :options="partnerOpts" :model-value="filter.partner" @update:model-value="v => set({ partner: v })" />
+    <MultiSelect label="Owner" :options="ownerOpts" :model-value="filter.owner" @update:model-value="v => set({ owner: v })" />
+    <MultiSelect label="Stage" :options="stageOpts" :model-value="filter.stage" @update:model-value="v => set({ stage: v as typeof filter.stage })" />
+    <MultiSelect label="Deal type" :options="dealOpts" :model-value="filter.dealType" @update:model-value="v => set({ dealType: v })" />
+    <MultiSelect label="Health" :options="healthOpts" :model-value="filter.health" @update:model-value="v => set({ health: v })" />
     <span class="daterange" :class="{ on: filter.dateFrom || filter.dateTo }">
       <CalendarRange class="ico" aria-hidden="true" />
       <select class="dr-by" aria-label="Date field" :value="filter.dateBy ?? 'close'" @change="set({ dateBy: ($event.target as HTMLSelectElement).value as DateField })">
@@ -98,7 +83,6 @@ function clearAll() {
 .chip .cnt { font-size: 11px; font-weight: 600; border-radius: 9px; padding: 1px 6px; background: var(--chip); color: var(--muted); }
 .chip[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
 .chip[aria-pressed="true"] .cnt { background: var(--on-primary); color: var(--primary); }
-.sel { height: 36px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--surface); font-size: 13px; color: var(--text-2); max-width: 170px; }
 .search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border-strong); background: var(--surface); border-radius: 8px; padding: 0 10px; height: 36px; color: var(--muted); }
 .search input { border: 0; outline: none; width: 170px; background: transparent; font-size: 13px; color: var(--text); }
 .lbl { display: inline-flex; align-items: center; gap: 6px; min-width: 78px; }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {
   CalendarRange, ChartColumn, KeyRound, LayoutDashboard, ListTodo, LogOut, Moon,
-  ShieldCheck, Sun, BriefcaseBusiness,
+  ShieldCheck, Sun, BriefcaseBusiness, History,
 } from 'lucide-vue-next'
 import { ROLE_LABEL } from '#shared/constants'
 
@@ -14,6 +14,7 @@ const nav = computed(() => [
   { to: '/my-actions', label: 'My Actions', icon: ListTodo },
   { to: '/reports/weekly', label: 'Weekly Report', icon: CalendarRange },
   { to: '/reports/monthly', label: 'Monthly Report', icon: ChartColumn },
+  { to: '/logs', label: 'Change log', icon: History },
   ...(user.value?.role === 'admin' ? [{ to: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
 ])
 const isActive = (item: { to: string, exact?: boolean }) =>
@@ -26,7 +27,7 @@ const isDark = computed(() => theme.theme.value === 'dark')
   <div class="shell">
     <nav aria-label="Main" class="side">
       <NuxtLink to="/" class="brand">
-        <div class="logo">LCG</div>
+        <div class="logo"><AppLogo :size="28" /></div>
         <div class="brand-text"><span class="b1">Opportunity</span><span class="b2">Management</span></div>
       </NuxtLink>
       <NuxtLink v-for="item in nav" :key="item.to" :to="item.to" class="nav-link" :class="{ active: isActive(item) }">
@@ -70,7 +71,8 @@ const isDark = computed(() => theme.theme.value === 'dark')
 .shell { min-height: 100vh; display: flex; flex-wrap: wrap; }
 .side { flex: 1 1 220px; max-width: 240px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 14px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; transition: background-color 220ms, border-color 220ms; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 20px; text-decoration: none; color: var(--text); }
-.logo { width: 32px; height: 32px; border-radius: 8px; background: var(--primary); color: var(--on-primary); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+.logo { width: 38px; height: 38px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; transition: transform var(--dur) var(--ease-out); }
+.brand:hover .logo { transform: rotate(-6deg) scale(1.06); }
 .brand-text { display: flex; flex-direction: column; }
 .b1 { font-weight: 700; font-size: 14px; }
 .b2 { font-size: 12px; color: var(--muted); }

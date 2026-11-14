@@ -8,8 +8,9 @@ import { ArrowRight, CalendarX2, LayoutDashboard, PartyPopper, SearchX, CircleDo
 useHead({ title: 'Dashboard · LCG Opportunity' })
 const { $api } = useNuxtApp()
 const { queryForApi, filter, set } = useOppFilters()
+const fy = ref<number | null>(null) // forecast year (close month chart); null = current year
 const { data, error, status } = await useAsyncData('dashboard',
-  () => $api<DashboardResponse>('/api/dashboard', { query: queryForApi.value }), { watch: [queryForApi] })
+  () => $api<DashboardResponse>('/api/dashboard', { query: { ...queryForApi.value, ...(fy.value ? { fy: fy.value } : {}) } }), { watch: [queryForApi, fy] })
 
 const pipelineLink = (extra: Record<string, string> = {}) => ({ path: '/pipeline', query: { ...queryForApi.value, ...extra } })
 const kpis = computed(() => {
@@ -60,6 +61,8 @@ const isRed = (o: OppItem) => HEALTH_BUCKET(o.health) === 'Red' || o.warnings.in
         <span class="small muted">{{ k.sub }}</span>
       </NuxtLink>
     </section>
+
+    <SalesInsights :ins="data.insights" :link="pipelineLink" :fy="data.insights.forecast.year" @update:fy="v => (fy = v)" />
 
     <section class="grid-3">
       <div class="card stack" style="gap: 14px">

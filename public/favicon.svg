@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 2 94 94">
+  <title>LCG</title>
+  <g fill="#E8202A" transform="translate(24 38) rotate(-4) skewY(-36) scale(.64)">
+    <path d="M6 16 H18 V82 H82 V94 H6 Z"/>
+    <path d="M26 30 H58 V41 H37 V63 H58 V74 H26 Z"/>
+    <rect x="44" y="48" width="9" height="9"/>
+    <rect x="62" y="30" width="11" height="11"/>
+    <rect x="62" y="52" width="11" height="22"/>
+    <rect x="66" y="10" width="11" height="11"/>
+    <rect x="82" y="22" width="11" height="11"/>
+  </g>
+</svg>

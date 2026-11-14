@@ -3,7 +3,7 @@ import { highlightTags, reportPeriod } from '#shared/highlight'
 import type { OppItem, OppListResponse } from '#shared/types'
 import { WARNING_META, type WarningCode } from '#shared/rules'
 import { HEALTH_BUCKET, STAGE_SHORT, WARNING_LABEL } from '#shared/constants'
-import { BriefcaseBusiness, Download, Info, Pencil, Plus, SearchX, SquarePen, Trash2 } from 'lucide-vue-next'
+import { BriefcaseBusiness, Download, Info, Plus, SearchX, SquarePen, Trash2, Upload } from 'lucide-vue-next'
 
 useHead({ title: 'Pipeline · LCG Opportunity' })
 const { $api } = useNuxtApp()
@@ -54,10 +54,9 @@ const rows = sort.rows
 const isRed = (o: OppItem) => HEALTH_BUCKET(o.health) === 'Red' || o.warnings.includes('W3')
 const pipelineUsd = computed(() => rows.value.filter(o => o.status !== 'Closed').reduce((s, o) => s + o.amountUsd, 0))
 
-// Quick Update: button per row, or select a row and press "U" (SRS S4)
+// Update (activity + all fields): button per row, or select a row and press "U" (SRS S4)
 const selected = ref<number | null>(null)
 const updating = ref<OppItem | null>(null)
-const editing = ref<OppItem | null>(null)
 const deleting = ref<OppItem | null>(null)
 function onKey(e: KeyboardEvent) {
   if (updating.value || (e.target as HTMLElement)?.closest('input, textarea, select')) return
@@ -78,26 +77,42 @@ async function onSaved() {
   await refresh()
 }
 
-function exportCsv() {
-  const cols: [string, (o: OppItem) => unknown][] = [
-    ['Code', o => o.oppCode], ['Opportunity', o => o.name], ['Customer', o => o.customer], ['Industry', o => o.industry],
-    ['Market', o => o.marketCode], ['Country', o => o.country], ['Partner', o => o.partner], ['Solution', o => o.solution],
-    ['Deal type', o => o.dealType], ['Sales owner', o => o.salesOwner], ['VI owner', o => o.viOwner], ['Amount', o => o.amount],
-    ['Currency', o => o.currency], ['Amount USD', o => o.amountUsd], ['Win %', o => o.winRate], ['Weighted USD', o => o.weightedUsd],
-    ['Priority', o => o.priority], ['Deal size', o => o.dealSize], ['Status', o => o.status], ['Stage', o => o.stage],
-    ['Latest activity', o => o.latestActivity], ['Latest update', o => o.latestUpdateDate], ['Next action', o => o.nextAction],
-    ['Action owner', o => o.actionOwner], ['Due date', o => o.dueDate], ['Last contact', o => o.lastContactDate],
-    ['Expected close', o => o.expectedCloseDate], ['Days since update', o => o.daysSinceUpdate], ['Health', o => o.health],
-    ['Pending reason', o => o.pendingReason], ['Lost reason', o => o.lostReason], ['Warnings', o => o.warnings.join(' ')],
-  ]
-  const esc = (v: unknown) => (v === null || v === undefined ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v))
-  const csv = [cols.map(c => c[0]).join(','), ...rows.value.map(o => cols.map(c => esc(c[1](o))).join(','))].join('\r\n')
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }))
-  a.download = `pipeline-${data.value?.today ?? 'export'}.csv`
-  a.click()
-  URL.revokeObjectURL(a.href)
+const { data: meta } = await useMeta()
+const exporting = ref(false)
+const importing = ref(false)
+async function exportExcel() {
+  exporting.value = true
+  try { await exportOppsToExcel(rows.value, meta.value, `pipeline-${data.value?.today ?? 'export'}.xlsx`) }
+  finally { exporting.value = false }
 }
+
+// Overview of the opps currently listed (follows tabs + filters)
+const overview = computed(() => {
+  const list = rows.value
+  const open = list.filter(o => o.status !== 'Closed')
+  const sum = (xs: number[]) => xs.reduce((x, y) => x + y, 0)
+  const pipeline = sum(open.map(o => o.amountUsd))
+  const health = { Green: 0, Amber: 0, Red: 0 }
+  for (const o of open) {
+    const h = HEALTH_BUCKET(o.health)
+    if (h !== 'Closed') health[h]++
+  }
+  const today = data.value?.today ?? ''
+  const in30 = today ? new Date(Date.parse(`${today}T00:00:00Z`) + 30 * 864e5).toISOString().slice(0, 10) : ''
+  return {
+    total: list.length,
+    open: open.length,
+    pipeline,
+    weighted: sum(open.map(o => o.weightedUsd)),
+    avgWin: open.length ? Math.round(sum(open.map(o => o.winRate)) / open.length) : 0,
+    health,
+    warnings: open.filter(o => o.warnings.length).length,
+    overdue: open.filter(o => o.warnings.includes('W3')).length,
+    closing30: open.filter(o => o.expectedCloseDate >= today && o.expectedCloseDate <= in30).length,
+    won: list.filter(o => o.stage === 'W').length,
+  }
+})
+const HEALTH_COLOR = { Green: 'var(--green)', Amber: 'var(--amber)', Red: 'var(--red)' } as const
 </script>
 
 <template>
@@ -110,12 +125,31 @@ function exportCsv() {
       </div>
     </div>
     <div class="row">
-      <button type="button" class="btn" title="CSV opens in Excel; the Excel template export comes later" @click="exportCsv"><Download class="ico" aria-hidden="true" />Export CSV</button>
+      <button type="button" class="btn" title="Download the listed opps as Excel; edit and import it back" :disabled="exporting || !rows.length" @click="exportExcel"><Download class="ico" aria-hidden="true" />{{ exporting ? 'Preparing…' : 'Export Excel' }}</button>
+      <button v-if="me && ['admin', 'market_lead', 'sales'].includes(me.role)" type="button" class="btn" title="Update or add opps from an exported Excel file" @click="importing = true"><Upload class="ico" aria-hidden="true" />Import Excel</button>
       <NuxtLink to="/opportunities/new" class="btn btn-primary"><Plus class="ico" aria-hidden="true" />New Opp</NuxtLink>
     </div>
   </div>
 
   <FilterBar :market-counts="data?.marketCounts" />
+
+  <section v-if="data" class="ov card" aria-label="Overview">
+    <div class="ov-cell"><span class="ov-k">Opportunities</span><span class="ov-v"><AnimatedNumber :value="overview.total" /></span><span class="ov-s">{{ overview.open }} open · {{ overview.won }} won</span></div>
+    <div class="ov-cell"><span class="ov-k">Pipeline</span><span class="ov-v"><AnimatedNumber :value="overview.pipeline" :format="fmtUsd" /></span><span class="ov-s">open opps, USD</span></div>
+    <div class="ov-cell"><span class="ov-k">Weighted</span><span class="ov-v"><AnimatedNumber :value="overview.weighted" :format="fmtUsd" /></span><span class="ov-s">avg win rate {{ overview.avgWin }}%</span></div>
+    <div class="ov-cell wide">
+      <span class="ov-k">Health of open opps</span>
+      <div v-if="overview.open" class="ov-bar" role="img" :aria-label="`Green ${overview.health.Green}, Amber ${overview.health.Amber}, Red ${overview.health.Red}`">
+        <template v-for="(n, h) in overview.health" :key="h">
+          <span v-if="n" v-tip="`${h}: ${n}`" class="bar-fill" :style="{ flex: `${n} 1 0`, background: HEALTH_COLOR[h] }">{{ n }}</span>
+        </template>
+      </div>
+      <span v-else class="ov-s">—</span>
+      <span class="ov-s"><span class="dot" style="background: var(--green)" />{{ overview.health.Green }} · <span class="dot" style="background: var(--amber)" />{{ overview.health.Amber }} · <span class="dot" style="background: var(--red)" />{{ overview.health.Red }}</span>
+    </div>
+    <div class="ov-cell"><span class="ov-k">With warnings</span><span class="ov-v" :class="{ bad: overview.warnings }"><AnimatedNumber :value="overview.warnings" /></span><span class="ov-s">{{ overview.overdue }} past close date</span></div>
+    <div class="ov-cell"><span class="ov-k">Closing ≤ 30 days</span><span class="ov-v"><AnimatedNumber :value="overview.closing30" /></span><span class="ov-s">expected close</span></div>
+  </section>
 
   <div role="tablist" aria-label="Quick lists" class="tabs">
     <button v-for="t in tabs" :key="t.id" type="button" role="tab" class="tab" :aria-selected="!warning && tab === t.id" @click="setTab(t.id)">
@@ -154,11 +188,11 @@ function exportCsv() {
         >
           <td class="muted" style="white-space: nowrap">{{ o.oppCode }}</td>
           <td style="max-width: 300px">
-            <NuxtLink :to="`/opportunities/${o.oppCode}`" style="font-weight: 600; text-decoration: none; color: var(--text)">{{ o.name }}</NuxtLink>
-            <div class="muted">{{ o.customer }}</div>
+            <NuxtLink v-tip :to="`/opportunities/${o.oppCode}`" class="clamp-2" style="font-weight: 600; text-decoration: none; color: var(--text)">{{ o.name }}</NuxtLink>
+            <div v-tip class="muted truncate">{{ o.customer }}</div>
           </td>
           <td><span class="mkt-cell"><MarketFlag :code="o.marketCode" />{{ o.marketCode }}</span></td>
-          <td>{{ o.partner }}</td>
+          <td><div v-tip class="truncate" style="max-width: 130px">{{ o.partner }}</div></td>
           <td style="white-space: nowrap">
             <span class="badge">{{ STAGE_SHORT[o.stage] }}</span>
             <div v-if="o.status === 'On Hold'" class="small" style="color: var(--amber-fg); margin-top: 4px">On hold</div>
@@ -167,7 +201,7 @@ function exportCsv() {
           <td class="num" :title="o.winRateOverride !== null ? `Override: ${o.winRateReason ?? 'no reason'}` : 'Stage default'">{{ o.winRate }}%</td>
           <td>{{ o.salesOwner }}</td>
           <td style="max-width: 260px; color: var(--text-2)">
-            <div class="clamp">{{ o.latestActivity ?? '—' }}</div>
+            <div v-tip class="clamp">{{ o.latestActivity ?? '—' }}</div>
             <div class="small muted">{{ daysAgo(o.daysSinceUpdate) }}</div>
           </td>
           <td :style="{ whiteSpace: 'nowrap', color: o.warnings.includes('W3') ? 'var(--danger)' : 'var(--text-2)', fontWeight: o.warnings.includes('W3') ? 600 : 400 }">{{ o.expectedCloseDate }}</td>
@@ -176,7 +210,6 @@ function exportCsv() {
           <td>
             <span class="row-actions">
               <button v-if="o.canEdit" type="button" class="btn btn-outline-primary" @click.stop="updating = o"><SquarePen class="ico" aria-hidden="true" />Update</button>
-              <button v-if="o.canEdit" type="button" class="icon-btn" title="Edit details" aria-label="Edit details" @click.stop="editing = o"><Pencil class="ico" aria-hidden="true" /></button>
               <button v-if="o.canDelete" type="button" class="icon-btn danger" title="Delete" aria-label="Delete" @click.stop="deleting = o"><Trash2 class="ico" aria-hidden="true" /></button>
             </span>
           </td>
@@ -186,13 +219,13 @@ function exportCsv() {
     </table>
   </div>
   <p class="small muted row" style="margin: 0; gap: 6px">
-    <Info class="ico" aria-hidden="true" />Light-red rows = Red health or past Expected Close (W3). Hover a warning code for its name. Select a row and press <kbd>U</kbd> for Quick Update.
+    <Info class="ico" aria-hidden="true" />Light-red rows = Red health or past Expected Close (W3). Hover a warning code for its name. Select a row and press <kbd>U</kbd> to update it.
     Calculated on {{ data?.today }} (JST).
   </p>
 
-  <OppEditModal v-if="editing" :opp="editing" :can-change-market="me?.role === 'admin'" @close="editing = null" @saved="editing = null; refresh()" />
   <DeleteOppDialog v-if="deleting" :opp="deleting" @close="deleting = null" @deleted="deleting = null; refresh()" />
-  <QuickUpdateDrawer v-if="updating && data" :opp="updating" :today="data.today" @close="updating = null" @saved="onSaved" />
+  <ImportExcelDialog v-if="importing" @close="importing = false" @done="refresh()" />
+  <OppUpdateDrawer v-if="updating && data" :opp="updating" :today="data.today" @close="updating = null" @saved="onSaved" />
 </template>
 
 <style scoped>
@@ -204,5 +237,17 @@ tbody tr { cursor: default; }
 .icon-btn .ico { width: 17px; height: 17px; }
 .icon-btn:hover { background: var(--surface-2); border-color: var(--border); color: var(--text); }
 .icon-btn.danger:hover { background: var(--danger-soft); border-color: var(--danger-border); color: var(--danger); }
+.ov { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0; padding: 0; overflow: hidden; }
+.ov-cell { display: flex; flex-direction: column; gap: 3px; padding: 14px 16px; border-right: 1px solid var(--row-border); min-width: 0; }
+.ov-cell:last-child { border-right: 0; }
+.ov-cell.wide { grid-column: span 2; }
+.ov-k { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.ov-v { font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
+.ov-v.bad { color: var(--danger); }
+.ov-s { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
+.ov-bar { display: flex; height: 22px; border-radius: 6px; overflow: hidden; margin: 4px 0 2px; gap: 2px; }
+.ov-bar span { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--surface); min-width: 18px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+@media (max-width: 720px) { .ov-cell.wide { grid-column: auto; } .ov-cell { border-right: 0; border-bottom: 1px solid var(--row-border); } }
 kbd { border: 1px solid var(--border-strong); border-radius: 4px; padding: 0 4px; font-size: 11px; background: var(--surface); }
 </style>

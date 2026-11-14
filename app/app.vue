@@ -1,6 +1,7 @@
 <template>
-  <NuxtLoadingIndicator color="#1E4FC2" :height="3" />
+  <NuxtLoadingIndicator color="#E8202A" :height="3" />
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
+  <SplashScreen />
 </template>

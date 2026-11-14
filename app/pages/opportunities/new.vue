@@ -22,7 +22,7 @@ const form = reactive({
   solution: '',
   isLaida: false,
   dealType: '',
-  salesOwnerId: me.value?.id ?? null,
+  salesOwnerAccount: me.value?.account ?? '',
   viOwnerId: null as number | null,
   amount: 0,
   currency: 'USD',
@@ -92,7 +92,7 @@ async function save(confirmDuplicate = false) {
         solution: form.solution || null,
         isLaida: form.isLaida,
         dealType: form.dealType,
-        salesOwnerId: form.salesOwnerId,
+        salesOwnerAccount: form.salesOwnerAccount.trim(),
         viOwnerId: form.viOwnerId,
         amount: Number(form.amount) || 0,
         currency: form.currency,
@@ -208,8 +208,9 @@ async function save(confirmDuplicate = false) {
     <div class="divider" />
     <div class="section-label">People &amp; next step</div>
     <div class="form-grid">
-      <label class="field">Sales owner <span class="req">*</span>
-        <select v-model="form.salesOwnerId" class="select" required><option v-for="u in people" :key="u.id" :value="u.id">{{ u.account }}</option></select>
+      <label class="field">Sales owner (FPT account) <span class="req">*</span>
+        <input v-model="form.salesOwnerAccount" class="input" required list="new-acc-list" autocomplete="off" placeholder="e.g. SonTV16" title="Type the account of the sales person">
+        <datalist id="new-acc-list"><option v-for="u in meta?.users ?? []" :key="u.id" :value="u.account" /></datalist>
       </label>
       <label class="field">VI owner
         <select v-model="form.viOwnerId" class="select"><option :value="null">—</option><option v-for="u in people" :key="u.id" :value="u.id">{{ u.account }}</option></select>

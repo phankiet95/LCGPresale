@@ -21,6 +21,8 @@ async function submit() {
     })
     await refreshCurrentUser()
     const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/') ? route.query.redirect : '/'
+    // play the LCG splash while the next page loads, then reveal it
+    if (!res.mustChangePassword) useSplash().show('Loading your pipeline…')
     await navigateTo(res.mustChangePassword ? '/change-password' : redirect)
   }
   catch (e) {
